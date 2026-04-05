@@ -1,0 +1,889 @@
+﻿<Window x:Class="desktop_cshar.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Image Studio"
+        Height="900"
+        Width="1300"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- TOP BAR -->
+        <Border Grid.Row="0"
+                Background="#F3F3F3"
+                BorderBrush="#DDD"
+                BorderThickness="1"
+                Padding="10"
+                CornerRadius="6">
+            <DockPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            DockPanel.Dock="Left">
+                    <TextBlock Text="Server:"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+
+                    <ComboBox Width="260"
+                              ItemsSource="{Binding Servers}"
+                              SelectedItem="{Binding SelectedServer}"
+                              DisplayMemberPath="DisplayName"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            DockPanel.Dock="Right">
+                    <Button Content="Add"
+                            Command="{Binding AddServerCommand}"
+                            Margin="0,0,6,0"/>
+                    <Button Content="Edit"
+                            Command="{Binding EditServerCommand}"
+                            Margin="0,0,6,0"/>
+                    <Button Content="Save"
+                            Command="{Binding SaveServersCommand}"
+                            Margin="0,0,6,0"/>
+                    <Button Content="Default"
+                            Command="{Binding SetDefaultServerCommand}"
+                            Margin="0,0,6,0"/>
+                    <Button Content="Delete"
+                            Command="{Binding DeleteServerCommand}"
+                            Margin="0,0,6,0"/>
+                    <Button Content="Test"
+                            Command="{Binding TestConnectionCommand}"/>
+                </StackPanel>
+
+            </DockPanel>
+        </Border>
+
+        <!-- TABS -->
+        <TabControl Grid.Row="2"
+                    SelectedIndex="{Binding SelectedTabIndex}">
+
+            <!-- WORKSPACE -->
+            <TabItem Header="Workspace">
+
+                <Grid x:Name="WorkspaceGrid"
+                      Margin="10"
+                      AllowDrop="True"
+                      DragOver="WorkspaceGrid_DragOver"
+                      DragLeave="WorkspaceGrid_DragLeave"
+                      Drop="WorkspaceGrid_Drop"
+                      Background="Transparent">
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="520"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- LEFT -->
+                        <ScrollViewer Grid.Column="0"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+
+                                <!-- INPUT -->
+                                <GroupBox Header="Input"
+                                          Margin="0,0,0,10">
+                                    <StackPanel Margin="6">
+                                        <Button Content="Select Image(s)"
+                                                Command="{Binding SelectImageCommand}"
+                                                Height="32"/>
+
+                                        <TextBlock Text="{Binding SelectedImagePath}"
+                                                   FontSize="10"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,6,0,0"/>
+
+                                        <TextBlock Text="{Binding SelectedImagePaths.Count, StringFormat=Selected images: {0}}"
+                                                   Margin="0,6,0,8"
+                                                   FontWeight="SemiBold"/>
+
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Disabled">
+                                            <ListBox ItemsSource="{Binding SelectedImagePaths}"
+                                                     SelectedItem="{Binding SelectedGalleryImagePath, Mode=TwoWay}"
+                                                     BorderThickness="0"
+                                                     Background="Transparent"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                                <ListBox.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ListBox.ItemsPanel>
+
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#DDD"
+                                                                BorderThickness="1"
+                                                                CornerRadius="4"
+                                                                Padding="4"
+                                                                Margin="0,0,8,0"
+                                                                Background="White">
+                                                            <Image Source="{Binding}"
+                                                                   Width="72"
+                                                                   Height="72"
+                                                                   Stretch="UniformToFill"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+
+                                                <ListBox.ItemContainerStyle>
+                                                    <Style TargetType="ListBoxItem">
+                                                        <Setter Property="Padding" Value="0"/>
+                                                        <Setter Property="Margin" Value="0"/>
+                                                        <Setter Property="BorderThickness" Value="0"/>
+                                                        <Setter Property="Background" Value="Transparent"/>
+                                                        <Style.Triggers>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                            </Trigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ListBox.ItemContainerStyle>
+                                            </ListBox>
+                                        </ScrollViewer>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- PROMPTING -->
+                                <GroupBox Header="Prompting"
+                                          Margin="0,0,0,10">
+                                    <StackPanel Margin="6">
+
+                                        <TextBlock Text="Prompt Override"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox x:Name="PromptOverrideTextBox"
+                                                 Text="{Binding PromptOverride}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="60"
+                                                 Margin="0,0,0,8"/>
+
+                                        <TextBlock Text="Negative Prompt Override"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox x:Name="NegativePromptOverrideTextBox"
+                                                 Text="{Binding NegativePromptOverride}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="60"
+                                                 Margin="0,0,0,8"/>
+
+                                        <TextBlock Text="Final Prompt"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox x:Name="FinalPromptTextBox"
+                                                 Text="{Binding FinalPrompt}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="80"
+                                                 Margin="0,0,0,8"/>
+
+                                        <TextBlock Text="Final Negative Prompt"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox x:Name="FinalNegativePromptTextBox"
+                                                 Text="{Binding FinalNegativePrompt}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="80"/>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- GENERATION -->
+                                <GroupBox Header="Generation"
+                                          Margin="0,0,0,10">
+                                    <StackPanel Margin="6">
+
+                                        <TextBlock Text="Model"
+                                                   Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="90"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox Grid.Column="0"
+                                                      ItemsSource="{Binding AvailableModels}"
+                                                      SelectedItem="{Binding SelectedModel}"
+                                                      DisplayMemberPath="Name"
+                                                      Height="30"/>
+
+                                            <Button Grid.Column="2"
+                                                    Content="Refresh"
+                                                    Height="30"
+                                                    Command="{Binding RefreshModelsCommand}"/>
+                                        </Grid>
+
+                                        <Border Background="#FFF3CD"
+                                                BorderBrush="#FFEEBA"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="6"
+                                                Margin="0,0,0,6">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelectedModelAvailable}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <TextBlock Text="{Binding ModelWarningMessage}"
+                                                       Foreground="#856404"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
+
+                                        <Button Content="Install Selected Model"
+                                                Command="{Binding InstallModelCommand}"
+                                                Margin="0,0,0,8">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelectedModelAvailable}" Value="False">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <TextBlock Text="New model repo id"
+                                                   Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="130"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding NewModelId, UpdateSourceTrigger=PropertyChanged}"
+                                                     Height="30"
+                                                     ToolTip="Např. runwayml/stable-diffusion-v1-5"/>
+
+                                            <Button Grid.Column="2"
+                                                    Content="Install New"
+                                                    Height="30"
+                                                    Command="{Binding InstallNewModelCommand}"/>
+                                        </Grid>
+
+                                        <TextBlock Text="Preset"
+                                                   Margin="0,0,0,4"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="70"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="70"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox Grid.Column="0"
+                                                      ItemsSource="{Binding GenerationPresets}"
+                                                      SelectedItem="{Binding SelectedGenerationPreset}"
+                                                      DisplayMemberPath="DisplayName"
+                                                      Height="30"/>
+
+                                            <Button Grid.Column="2"
+                                                    Content="Save"
+                                                    Height="30"
+                                                    Command="{Binding SaveGenerationPresetCommand}"/>
+
+                                            <Button Grid.Column="4"
+                                                    Content="Rename"
+                                                    Height="30"
+                                                    Command="{Binding RenameGenerationPresetCommand}"/>
+
+                                            <Button Grid.Column="6"
+                                                    Content="Delete"
+                                                    Height="30"
+                                                    Command="{Binding DeleteGenerationPresetCommand}"/>
+
+                                            <Button Grid.Column="8"
+                                                    Content="Reset"
+                                                    Height="30"
+                                                    Command="{Binding ResetGenerationParametersCommand}"/>
+                                        </Grid>
+
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <StackPanel Grid.Row="0"
+                                                        Grid.Column="0">
+                                                <TextBlock Text="Width"
+                                                           Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding GenerationWidth}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="0"
+                                                        Grid.Column="2">
+                                                <TextBlock Text="Height"
+                                                           Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding GenerationHeight}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="2"
+                                                        Grid.Column="0">
+                                                <TextBlock Text="Steps"
+                                                           Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding GenerationSteps}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Row="2"
+                                                        Grid.Column="2">
+                                                <TextBlock Text="Guidance Scale"
+                                                           Margin="0,0,0,4"/>
+                                                <TextBox Text="{Binding GenerationGuidanceScale}"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <TextBlock Text="Number of images"
+                                                   Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding NumberOfImages}"
+                                                 Margin="0,0,0,8"/>
+
+                                        <CheckBox Content="Random Seed"
+                                                  IsChecked="{Binding UseRandomSeed}"
+                                                  Margin="0,0,0,6"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="90"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="70"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox Grid.Column="0"
+                                                     Text="{Binding GenerationSeed}">
+                                                <TextBox.Style>
+                                                    <Style TargetType="TextBox">
+                                                        <Setter Property="IsEnabled" Value="True"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding UseRandomSeed}" Value="True">
+                                                                <Setter Property="IsEnabled" Value="False"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBox.Style>
+                                            </TextBox>
+
+                                            <Button Grid.Column="2"
+                                                    Content="Randomize"
+                                                    Command="{Binding RandomizeSeedCommand}"/>
+
+                                            <Button Grid.Column="4"
+                                                    Content="Copy"
+                                                    Command="{Binding CopySeedCommand}"/>
+                                        </Grid>
+
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <!-- ACTIONS -->
+                                <GroupBox Header="Actions">
+                                    <StackPanel Margin="6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="8"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Button Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    Content="Analyze + Generate"
+                                                    Height="34"
+                                                    Command="{Binding AnalyzeAndGenerateCommand}"/>
+
+                                            <Button Grid.Row="0"
+                                                    Grid.Column="2"
+                                                    Content="Generate Final"
+                                                    Height="34"
+                                                    Command="{Binding GenerateFromFinalPromptCommand}"/>
+
+                                            <Button Grid.Row="2"
+                                                    Grid.Column="0"
+                                                    Content="Generate Text"
+                                                    Height="34"
+                                                    Command="{Binding GenerateFromTextCommand}"/>
+
+                                            <Button Grid.Row="2"
+                                                    Grid.Column="2"
+                                                    Content="New Session"
+                                                    Height="34"
+                                                    Command="{Binding NewSessionCommand}"/>
+
+                                            <Button Grid.Row="4"
+                                                    Grid.Column="0"
+                                                    Content="Clear"
+                                                    Height="34"
+                                                    Command="{Binding ClearWorkspaceCommand}"/>
+
+                                            <Button Grid.Row="4"
+                                                    Grid.Column="2"
+                                                    Content="Copy JSON"
+                                                    Height="34"
+                                                    Command="{Binding CopyJsonCommand}"/>
+
+                                            <Button Grid.Row="6"
+                                                    Grid.Column="0"
+                                                    Content="Copy Final Prompt"
+                                                    Height="34"
+                                                    Command="{Binding CopyFinalPromptCommand}"/>
+
+                                            <Button Grid.Row="6"
+                                                    Grid.Column="2"
+                                                    Content="Copy Final Negative"
+                                                    Height="34"
+                                                    Command="{Binding CopyFinalNegativePromptCommand}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- RIGHT -->
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="10"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- PREVIEWS -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Source"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,4"/>
+                                    <Border BorderBrush="#DDD"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                        <Image x:Name="SourcePreviewImage"
+                                               Height="260"
+                                               Stretch="Uniform"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Generated"
+                                               FontWeight="SemiBold"
+                                               Margin="0,0,0,4"/>
+                                    <Border BorderBrush="#DDD"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                        <Image x:Name="PreviewImage"
+                                               Height="260"
+                                               Stretch="Uniform"/>
+                                    </Border>
+
+                                    <Button Content="Save Image As"
+                                            Command="{Binding SaveGeneratedImageAsCommand}"
+                                            Margin="0,8,0,0"
+                                            Height="32"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- RESPONSE -->
+                            <StackPanel Grid.Row="2">
+                                <TextBlock Text="Response JSON"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4"/>
+                                <TextBox x:Name="ResponseJsonTextBox"
+                                         Text="{Binding LastResponseJson}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Height="200"
+                                         VerticalScrollBarVisibility="Auto"
+                                         HorizontalScrollBarVisibility="Auto"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <!-- DROP OVERLAY -->
+                    <Border x:Name="DropOverlay"
+                            Background="#66000000"
+                            Visibility="Collapsed"
+                            CornerRadius="6">
+                        <StackPanel VerticalAlignment="Center"
+                                    HorizontalAlignment="Center">
+                            <TextBlock Text="⬇"
+                                       Foreground="White"
+                                       FontSize="42"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Drop image here"
+                                       Foreground="White"
+                                       FontSize="24"/>
+                        </StackPanel>
+                    </Border>
+
+                </Grid>
+            </TabItem>
+
+            <!-- HISTORY -->
+            <TabItem Header="History">
+
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="420"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- LEFT -->
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- FILTERS -->
+                        <GroupBox Grid.Row="0"
+                                  Header="Filters">
+                            <StackPanel Margin="6">
+                                <TextBlock Text="Search"
+                                           Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding HistorySearchText}"
+                                         Margin="0,0,0,8"/>
+
+                                <TextBlock Text="Operation Type"
+                                           Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding HistoryOperationFilters}"
+                                          SelectedItem="{Binding SelectedHistoryOperationFilter}"
+                                          Margin="0,0,0,8"/>
+
+                                <Button Content="Clear Filters"
+                                        Height="32"
+                                        Command="{Binding ClearHistoryFiltersCommand}"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- LIST -->
+                        <GroupBox Grid.Row="2"
+                                  Header="History Items">
+                            <ListBox ItemsSource="{Binding FilteredHistoryItems}"
+                                     SelectedItem="{Binding SelectedHistoryItem}"
+                                     Margin="6">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#DDD"
+                                                BorderThickness="1"
+                                                Padding="8"
+                                                Margin="0,0,0,6"
+                                                CornerRadius="4"
+                                                Background="White">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding CreatedAtLocalText}"
+                                                           FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding ShortOperationType}"/>
+                                                <TextBlock Text="{Binding ServerName}"
+                                                           FontSize="11"
+                                                           Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding ModelName}"
+                                                           FontSize="11"
+                                                           FontWeight="Bold"
+                                                           Margin="0,2,0,0"/>
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0,2,0,0">
+                                                    <TextBlock Text="Seed: "
+                                                               FontSize="11"/>
+                                                    <TextBlock Text="{Binding Seed}"
+                                                               FontSize="11"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </GroupBox>
+
+                        <!-- ACTIONS -->
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0"
+                                    Content="Repeat"
+                                    Height="34"
+                                    Command="{Binding RepeatFromHistoryCommand}"/>
+
+                            <Button Grid.Column="2"
+                                    Content="No Analyze"
+                                    Height="34"
+                                    Command="{Binding RepeatWithoutAnalyzeCommand}"/>
+
+                            <Button Grid.Column="4"
+                                    Content="Export"
+                                    Height="34"
+                                    Command="{Binding ExportCommand}"/>
+
+                            <Button Grid.Column="6"
+                                    Content="Delete"
+                                    Height="34"
+                                    Command="{Binding DeleteHistoryItemCommand}"/>
+                        </Grid>
+                    </Grid>
+
+                    <!-- RIGHT -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="10"/>
+                            <RowDefinition Height="200"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- META -->
+                        <GroupBox Grid.Row="0"
+                                  Header="Detail">
+                            <Grid Margin="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Text="Created:"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="1"
+                                           Text="{Binding SelectedHistoryItem.CreatedAtLocalText}"/>
+
+                                <TextBlock Grid.Row="2"
+                                           Grid.Column="0"
+                                           Text="Server:"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="2"
+                                           Grid.Column="1"
+                                           Text="{Binding SelectedHistoryItem.ServerName}"/>
+
+                                <TextBlock Grid.Row="4"
+                                           Grid.Column="0"
+                                           Text="Model:"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="4"
+                                           Grid.Column="1"
+                                           Text="{Binding SelectedHistoryItem.ModelName}"/>
+
+                                <TextBlock Grid.Row="6"
+                                           Grid.Column="0"
+                                           Text="Seed:"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="6"
+                                           Grid.Column="1"
+                                           Text="{Binding SelectedHistoryItem.Seed}"/>
+
+                                <TextBlock Grid.Row="8"
+                                           Grid.Column="0"
+                                           Text="Operation:"
+                                           FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="8"
+                                           Grid.Column="1"
+                                           Text="{Binding SelectedHistoryItem.ShortOperationType}"/>
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- PREVIEWS -->
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Source"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4"/>
+                                <Border BorderBrush="#DDD"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                    <Image x:Name="HistorySourcePreviewImage"
+                                           Height="220"
+                                           Stretch="Uniform"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Generated"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,4"/>
+                                <Border BorderBrush="#DDD"
+                                        BorderThickness="1"
+                                        CornerRadius="4">
+                                    <Image x:Name="HistoryGeneratedPreviewImage"
+                                           Height="220"
+                                           Stretch="Uniform"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- PROMPTS -->
+                        <GroupBox Grid.Row="4"
+                                  Header="Prompts">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Margin="6">
+
+                                    <TextBlock Text="Prompt Override"
+                                               Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding PromptOverride}"
+                                             Height="70"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             Margin="0,0,0,8"/>
+
+                                    <TextBlock Text="Negative Prompt Override"
+                                               Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding NegativePromptOverride}"
+                                             Height="70"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             Margin="0,0,0,8"/>
+
+                                    <TextBlock Text="Final Prompt"
+                                               Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FinalPrompt}"
+                                             Height="90"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"
+                                             Margin="0,0,0,8"/>
+
+                                    <TextBlock Text="Final Negative Prompt"
+                                               Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FinalNegativePrompt}"
+                                             Height="90"
+                                             AcceptsReturn="True"
+                                             TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </GroupBox>
+
+                        <!-- JSON -->
+                        <GroupBox Grid.Row="6"
+                                  Header="Response JSON">
+                            <TextBox Text="{Binding LastResponseJson}"
+                                     Margin="6"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Auto"/>
+                        </GroupBox>
+
+                    </Grid>
+                </Grid>
+
+            </TabItem>
+
+        </TabControl>
+
+        <!-- STATUS BAR -->
+        <Border Grid.Row="3"
+                Background="#F3F3F3"
+                Padding="6"
+                BorderBrush="#DDD"
+                BorderThickness="1,1,1,0">
+            <DockPanel>
+
+                <TextBlock x:Name="StatusMessageTextBlock"
+                           Text="{Binding StatusMessage}"
+                           DockPanel.Dock="Left"
+                           VerticalAlignment="Center"/>
+
+                <ProgressBar Width="200"
+                             Height="14"
+                             Margin="10,0,10,0"
+                             Minimum="0"
+                             Maximum="100"
+                             Value="{Binding InstallProgress}"
+                             DockPanel.Dock="Right">
+                    <ProgressBar.Style>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsInstallingModel}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ProgressBar.Style>
+                </ProgressBar>
+
+                <TextBlock x:Name="BusyTextBlock"
+                           Text="Working..."
+                           Visibility="Collapsed"
+                           DockPanel.Dock="Right"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+    </Grid>
+</Window>
