@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
@@ -32,13 +33,16 @@ public class MainViewModel : BaseViewModel
     public ObservableCollection<HistoryItem> FilteredHistoryItems { get; } = new();
     public ObservableCollection<GenerationPreset> GenerationPresets { get; } = new();
     public ObservableCollection<ModelInfo> AvailableModels { get; } = new();
+
     public ObservableCollection<string> SelectedImagePaths { get; } = new();
+    public ObservableCollection<string> GeneratedImagePaths { get; } = new();
 
     #endregion
 
     #region Selected Items
 
     private ServerProfile? _selectedServer;
+
     public ServerProfile? SelectedServer
     {
         get => _selectedServer;
@@ -67,6 +71,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private ModelInfo? _selectedModel;
+
     public ModelInfo? SelectedModel
     {
         get => _selectedModel;
@@ -81,6 +86,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private HistoryItem? _selectedHistoryItem;
+
     public HistoryItem? SelectedHistoryItem
     {
         get => _selectedHistoryItem;
@@ -102,6 +108,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string? _selectedImagePath;
+
     public string? SelectedImagePath
     {
         get => _selectedImagePath;
@@ -114,6 +121,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string? _selectedGalleryImagePath;
+
     public string? SelectedGalleryImagePath
     {
         get => _selectedGalleryImagePath;
@@ -131,11 +139,67 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    private string? _selectedGeneratedGalleryImagePath;
+
+    public string? SelectedGeneratedGalleryImagePath
+    {
+        get => _selectedGeneratedGalleryImagePath;
+        set
+        {
+            _selectedGeneratedGalleryImagePath = value;
+            OnPropertyChanged();
+
+            if (!string.IsNullOrWhiteSpace(_selectedGeneratedGalleryImagePath) &&
+                File.Exists(_selectedGeneratedGalleryImagePath) &&
+                Application.Current.MainWindow is MainWindow window)
+            {
+                window.SetPreviewImage(_selectedGeneratedGalleryImagePath);
+            }
+        }
+    }
+
     #endregion
 
     #region Prompt Properties
 
+    private bool _isGeneratingWithProgress;
+
+    public bool IsGeneratingWithProgress
+    {
+        get => _isGeneratingWithProgress;
+        set
+        {
+            _isGeneratingWithProgress = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private int _generationProgress;
+
+    public int GenerationProgress
+    {
+        get => _generationProgress;
+        set
+        {
+            _generationProgress = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private string _generationProgressText = string.Empty;
+
+    public string GenerationProgressText
+    {
+        get => _generationProgressText;
+        set
+        {
+            _generationProgressText = value;
+            OnPropertyChanged();
+        }
+    }
+
     private int _selectedTabIndex;
+
     public int SelectedTabIndex
     {
         get => _selectedTabIndex;
@@ -147,19 +211,9 @@ public class MainViewModel : BaseViewModel
             _ = SaveWorkspaceStateAsync();
         }
     }
-    
-    private int _numberOfImages = 1;
-    public int NumberOfImages
-    {
-        get => _numberOfImages;
-        set
-        {
-            _numberOfImages = value < 1 ? 1 : value;
-            OnPropertyChanged();
-        }
-    }
 
     private string _promptOverride = string.Empty;
+
     public string PromptOverride
     {
         get => _promptOverride;
@@ -171,6 +225,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _negativePromptOverride = string.Empty;
+
     public string NegativePromptOverride
     {
         get => _negativePromptOverride;
@@ -182,6 +237,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _finalPrompt = string.Empty;
+
     public string FinalPrompt
     {
         get => _finalPrompt;
@@ -196,6 +252,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _finalNegativePrompt = string.Empty;
+
     public string FinalNegativePrompt
     {
         get => _finalNegativePrompt;
@@ -208,6 +265,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _newModelId = string.Empty;
+
     public string NewModelId
     {
         get => _newModelId;
@@ -224,6 +282,7 @@ public class MainViewModel : BaseViewModel
     #region Generation Parameters
 
     private int _generationWidth = 512;
+
     public int GenerationWidth
     {
         get => _generationWidth;
@@ -235,6 +294,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private int _generationHeight = 512;
+
     public int GenerationHeight
     {
         get => _generationHeight;
@@ -246,6 +306,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private int _generationSteps = 12;
+
     public int GenerationSteps
     {
         get => _generationSteps;
@@ -257,6 +318,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private double _generationGuidanceScale = 6.5;
+
     public double GenerationGuidanceScale
     {
         get => _generationGuidanceScale;
@@ -267,7 +329,20 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    private int _numberOfImages = 1;
+
+    public int NumberOfImages
+    {
+        get => _numberOfImages;
+        set
+        {
+            _numberOfImages = value < 1 ? 1 : value;
+            OnPropertyChanged();
+        }
+    }
+
     private bool _useRandomSeed = true;
+
     public bool UseRandomSeed
     {
         get => _useRandomSeed;
@@ -280,6 +355,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private int _generationSeed = 42;
+
     public int GenerationSeed
     {
         get => _generationSeed;
@@ -292,6 +368,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private GenerationPreset? _selectedGenerationPreset;
+
     public GenerationPreset? SelectedGenerationPreset
     {
         get => _selectedGenerationPreset;
@@ -316,6 +393,7 @@ public class MainViewModel : BaseViewModel
     #region History Filter Properties
 
     private string _historySearchText = string.Empty;
+
     public string HistorySearchText
     {
         get => _historySearchText;
@@ -337,6 +415,7 @@ public class MainViewModel : BaseViewModel
     };
 
     private string _selectedHistoryOperationFilter = "All";
+
     public string SelectedHistoryOperationFilter
     {
         get => _selectedHistoryOperationFilter;
@@ -353,6 +432,7 @@ public class MainViewModel : BaseViewModel
     #region Output / Status Properties
 
     private string _lastResponseJson = string.Empty;
+
     public string LastResponseJson
     {
         get => _lastResponseJson;
@@ -365,6 +445,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string? _generatedImagePath;
+
     public string? GeneratedImagePath
     {
         get => _generatedImagePath;
@@ -373,10 +454,12 @@ public class MainViewModel : BaseViewModel
             _generatedImagePath = value;
             OnPropertyChanged();
             SaveGeneratedImageAsCommand.RaiseCanExecuteChanged();
+            OpenGeneratedImageFolderCommand.RaiseCanExecuteChanged();
         }
     }
 
     private bool _isBusy;
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -415,10 +498,12 @@ public class MainViewModel : BaseViewModel
             InstallModelCommand.RaiseCanExecuteChanged();
             InstallNewModelCommand.RaiseCanExecuteChanged();
             SaveGeneratedImageAsCommand.RaiseCanExecuteChanged();
+            OpenGeneratedImageFolderCommand.RaiseCanExecuteChanged();
         }
     }
 
     private string _statusMessage = "Ready";
+
     public string StatusMessage
     {
         get => _statusMessage;
@@ -430,6 +515,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private bool _isSelectedModelAvailable = true;
+
     public bool IsSelectedModelAvailable
     {
         get => _isSelectedModelAvailable;
@@ -441,6 +527,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private string _modelWarningMessage = string.Empty;
+
     public string ModelWarningMessage
     {
         get => _modelWarningMessage;
@@ -452,6 +539,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private bool _isInstallingModel;
+
     public bool IsInstallingModel
     {
         get => _isInstallingModel;
@@ -463,6 +551,7 @@ public class MainViewModel : BaseViewModel
     }
 
     private double _installProgress;
+
     public double InstallProgress
     {
         get => _installProgress;
@@ -511,6 +600,7 @@ public class MainViewModel : BaseViewModel
     public RelayCommand InstallModelCommand { get; }
     public RelayCommand InstallNewModelCommand { get; }
     public RelayCommand SaveGeneratedImageAsCommand { get; }
+    public RelayCommand OpenGeneratedImageFolderCommand { get; }
 
     #endregion
 
@@ -633,10 +723,19 @@ public class MainViewModel : BaseViewModel
         InstallNewModelCommand = new RelayCommand(
             async _ => await InstallNewModelAsync(),
             _ => !IsBusy && SelectedServer is not null && !string.IsNullOrWhiteSpace(NewModelId));
-        
+
         SaveGeneratedImageAsCommand = new RelayCommand(
             async _ => await SaveGeneratedImageAsAsync(),
             _ => !IsBusy && !string.IsNullOrWhiteSpace(GeneratedImagePath) && File.Exists(GeneratedImagePath));
+
+        OpenGeneratedImageFolderCommand = new RelayCommand(
+            _ => OpenGeneratedImageFolder(),
+            _ => !IsBusy && !string.IsNullOrWhiteSpace(GeneratedImagePath) && File.Exists(GeneratedImagePath));
+        
+        GenerateFromFinalPromptCommand = new RelayCommand(
+            async _ => await GenerateFromFinalPromptWithProgressAsync(),
+            _ => !IsBusy && SelectedServer is not null && !string.IsNullOrWhiteSpace(FinalPrompt));
+        
 
         LoadGenerationPresets();
         LoadWorkspaceStateAsync();
@@ -681,7 +780,6 @@ public class MainViewModel : BaseViewModel
         {
             AvailableModels.Clear();
             SelectedModel = null;
-
             UpdateStatusUi($"Failed to load models: {ex.Message}", false);
         }
     }
@@ -740,7 +838,9 @@ public class MainViewModel : BaseViewModel
         var userPresets = await _generationPresetService.LoadAsync();
 
         foreach (var preset in defaultPresets)
+        {
             GenerationPresets.Add(preset);
+        }
 
         foreach (var preset in userPresets)
         {
@@ -779,9 +879,10 @@ public class MainViewModel : BaseViewModel
             Servers.Add(server);
         }
 
-        SelectedServer = Servers.FirstOrDefault(s => _pendingSelectedServerId.HasValue && s.Id == _pendingSelectedServerId.Value)
-                         ?? Servers.FirstOrDefault(s => s.IsDefault)
-                         ?? Servers.FirstOrDefault();
+        SelectedServer =
+            Servers.FirstOrDefault(s => _pendingSelectedServerId.HasValue && s.Id == _pendingSelectedServerId.Value)
+            ?? Servers.FirstOrDefault(s => s.IsDefault)
+            ?? Servers.FirstOrDefault();
     }
 
     private async void LoadHistoryAsync()
@@ -961,6 +1062,27 @@ public class MainViewModel : BaseViewModel
             SelectedGalleryImagePath = string.Empty;
         }
 
+        GeneratedImagePaths.Clear();
+
+        var storedGeneratedPaths = DeserializeGeneratedImagePaths(item.GeneratedImagePathsJson)
+            .Where(p => !string.IsNullOrWhiteSpace(p) && File.Exists(p))
+            .ToList();
+
+        if (!storedGeneratedPaths.Any() &&
+            !string.IsNullOrWhiteSpace(item.GeneratedImagePath) &&
+            File.Exists(item.GeneratedImagePath))
+        {
+            storedGeneratedPaths.Add(item.GeneratedImagePath);
+        }
+
+        foreach (var path in storedGeneratedPaths)
+        {
+            GeneratedImagePaths.Add(path);
+        }
+
+        GeneratedImagePath = GeneratedImagePaths.FirstOrDefault() ?? string.Empty;
+        SelectedGeneratedGalleryImagePath = GeneratedImagePath;
+
         UseRandomSeed = item.UsedRandomSeed;
 
         if (!item.UsedRandomSeed && item.Seed.HasValue)
@@ -1090,6 +1212,23 @@ public class MainViewModel : BaseViewModel
                 File.Delete(itemToDelete.GeneratedImagePath);
             }
 
+            var generatedPaths = DeserializeGeneratedImagePaths(itemToDelete.GeneratedImagePathsJson);
+
+            foreach (var path in generatedPaths)
+            {
+                if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+                {
+                    try
+                    {
+                        File.Delete(path);
+                    }
+                    catch
+                    {
+                        // ignore jednotlivé chyby
+                    }
+                }
+            }
+
             HistoryItems.Remove(itemToDelete);
 
             SelectedHistoryItem = null;
@@ -1213,28 +1352,46 @@ public class MainViewModel : BaseViewModel
                 return;
             }
 
-            UpdateStatusUi("Stahuji vygenerovaný obrázek...", true);
+            UpdateStatusUi("Stahuji vygenerované obrázky...", true);
 
-            var fileResult = await _apiClientService.DownloadImageToTempFileAsync(result.ImagePath!);
+            var imageUrls = ExtractGeneratedImageUrls(LastResponseJson, SelectedServer.BaseUrl);
 
-            if (fileResult.FilePath == null)
+            if (!imageUrls.Any() && !string.IsNullOrWhiteSpace(result.ImagePath))
             {
-                UpdateStatusUi("Stažení obrázku selhalo", false);
+                imageUrls.Add(result.ImagePath);
+            }
+
+            var downloadedFiles = await DownloadGeneratedImagesAsync(imageUrls);
+
+            if (!downloadedFiles.Any())
+            {
+                UpdateStatusUi("Stažení obrázků selhalo", false);
 
                 MessageBox.Show(
-                    fileResult.ErrorMessage ?? "Obrázek byl vygenerován, ale nepodařilo se ho stáhnout.",
-                    "Chyba načtení obrázku",
+                    "Obrázky byly vygenerovány, ale nepodařilo se je stáhnout.",
+                    "Chyba načtení obrázků",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
                 return;
             }
 
-            GeneratedImagePath = fileResult.FilePath;
+            GeneratedImagePaths.Clear();
+
+            foreach (var file in downloadedFiles)
+            {
+                GeneratedImagePaths.Add(file);
+            }
+
+            GeneratedImagePath = GeneratedImagePaths.FirstOrDefault();
+            SelectedGeneratedGalleryImagePath = GeneratedImagePath;
 
             if (Application.Current.MainWindow is MainWindow previewWindow)
             {
-                previewWindow.SetPreviewImage(fileResult.FilePath);
+                if (!string.IsNullOrWhiteSpace(GeneratedImagePath))
+                {
+                    previewWindow.SetPreviewImage(GeneratedImagePath);
+                }
 
                 if (!string.IsNullOrWhiteSpace(SelectedHistoryItem.SourceImagePath) &&
                     File.Exists(SelectedHistoryItem.SourceImagePath))
@@ -1247,10 +1404,19 @@ public class MainViewModel : BaseViewModel
 
             var storedInputPath = !string.IsNullOrWhiteSpace(SelectedHistoryItem.SourceImagePath) &&
                                   File.Exists(SelectedHistoryItem.SourceImagePath)
-                ? CopyToAppStorage(SelectedHistoryItem.SourceImagePath, AppPaths.InputsDirectory)
+                ? CopyToAppStorage(SelectedHistoryItem.SourceImagePath, AppPaths.GetTodayInputsDirectory())
                 : string.Empty;
 
-            var storedOutputPath = CopyToAppStorage(fileResult.FilePath, AppPaths.OutputsDirectory);
+            var storedGeneratedPaths = new List<string>();
+            foreach (var generatedPath in GeneratedImagePaths)
+            {
+                if (!string.IsNullOrWhiteSpace(generatedPath) && File.Exists(generatedPath))
+                {
+                    storedGeneratedPaths.Add(CopyToAppStorage(generatedPath, AppPaths.GetTodayOutputsDirectory()));
+                }
+            }
+
+            var storedOutputPath = storedGeneratedPaths.FirstOrDefault() ?? string.Empty;
 
             var historyItem = new HistoryItem
             {
@@ -1260,6 +1426,7 @@ public class MainViewModel : BaseViewModel
                 ModelName = SelectedModel?.Name ?? string.Empty,
                 SourceImagePath = storedInputPath,
                 GeneratedImagePath = storedOutputPath,
+                GeneratedImagePathsJson = SerializeGeneratedImagePaths(storedGeneratedPaths),
                 PromptOverride = SelectedHistoryItem.PromptOverride ?? string.Empty,
                 NegativePromptOverride = SelectedHistoryItem.NegativePromptOverride ?? string.Empty,
                 FinalPrompt = finalPrompt,
@@ -1297,6 +1464,102 @@ public class MainViewModel : BaseViewModel
 
     #region Generation Methods
 
+    private async Task GenerateFromFinalPromptWithProgressAsync()
+    {
+        if (SelectedServer == null || string.IsNullOrWhiteSpace(FinalPrompt))
+            return;
+
+        if (!ValidateGenerationParameters())
+            return;
+
+        IsGeneratingWithProgress = true;
+        GenerationProgress = 0;
+        GenerationProgressText = "Starting...";
+
+        try
+        {
+            var jobId = await _apiClientService.StartGenerateJobAsync(
+                SelectedServer.BaseUrl,
+                FinalPrompt,
+                FinalNegativePrompt,
+                GenerationWidth,
+                GenerationHeight,
+                GenerationSteps,
+                GenerationGuidanceScale,
+                GetEffectiveSeed(),
+                SelectedModel?.Id,
+                NumberOfImages
+            );
+
+            if (string.IsNullOrWhiteSpace(jobId))
+            {
+                MessageBox.Show("Nepodařilo se spustit job.");
+                return;
+            }
+
+            GenerationJobStatus? status = null;
+
+            while (true)
+            {
+                await Task.Delay(700);
+
+                status = await _apiClientService.GetJobStatusAsync(SelectedServer.BaseUrl, jobId);
+                if (status == null)
+                    continue;
+
+                GenerationProgress = status.Progress;
+                GenerationProgressText = string.IsNullOrWhiteSpace(status.Message)
+                    ? status.Status
+                    : status.Message;
+
+                if (status.Status == "completed")
+                    break;
+
+                if (status.Status == "failed")
+                {
+                    MessageBox.Show(status.Error ?? "Generování selhalo.", "Chyba", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    return;
+                }
+            }
+
+            var imageUrls = status.GeneratedFilenames
+                .Select(f => $"{SelectedServer.BaseUrl.TrimEnd('/')}/images/{f}")
+                .ToList();
+
+            var downloadedFiles = await DownloadGeneratedImagesAsync(imageUrls);
+
+            if (!downloadedFiles.Any())
+            {
+                MessageBox.Show("Obrázky byly vygenerovány, ale nepodařilo se je stáhnout.");
+                return;
+            }
+
+            GeneratedImagePaths.Clear();
+            foreach (var file in downloadedFiles)
+            {
+                GeneratedImagePaths.Add(file);
+            }
+
+            GeneratedImagePath = GeneratedImagePaths.FirstOrDefault();
+            SelectedGeneratedGalleryImagePath = GeneratedImagePath;
+
+            if (Application.Current.MainWindow is MainWindow previewWindow &&
+                !string.IsNullOrWhiteSpace(GeneratedImagePath))
+            {
+                previewWindow.SetPreviewImage(GeneratedImagePath);
+            }
+
+            UpdateStatusUi("Generation completed", false);
+        }
+        finally
+        {
+            IsGeneratingWithProgress = false;
+            GenerationProgress = 0;
+            GenerationProgressText = string.Empty;
+        }
+    }
+
     private async Task InstallModelAsync()
     {
         if (SelectedServer == null || SelectedModel == null)
@@ -1308,7 +1571,7 @@ public class MainViewModel : BaseViewModel
 
         try
         {
-            var progressTask = Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 while (IsInstallingModel && InstallProgress < 90)
                 {
@@ -1358,7 +1621,7 @@ public class MainViewModel : BaseViewModel
         {
             var requestedModelId = NewModelId.Trim();
 
-            var progressTask = Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
                 while (IsInstallingModel && InstallProgress < 90)
                 {
@@ -1383,8 +1646,8 @@ public class MainViewModel : BaseViewModel
             await LoadModelsAsync();
 
             SelectedModel = AvailableModels.FirstOrDefault(m =>
-                string.Equals(m.Id, requestedModelId, StringComparison.OrdinalIgnoreCase))
-                ?? SelectedModel;
+                                string.Equals(m.Id, requestedModelId, StringComparison.OrdinalIgnoreCase))
+                            ?? SelectedModel;
 
             NewModelId = string.Empty;
             UpdateStatusUi("Model installed", false);
@@ -1485,9 +1748,9 @@ public class MainViewModel : BaseViewModel
         LoadGenerationPresets();
 
         SelectedGenerationPreset = GenerationPresets.FirstOrDefault(p =>
-            string.Equals(p.Name, newName, StringComparison.OrdinalIgnoreCase))
-            ?? GenerationPresets.FirstOrDefault(p => p.Name == "Balanced")
-            ?? GenerationPresets.FirstOrDefault();
+                                       string.Equals(p.Name, newName, StringComparison.OrdinalIgnoreCase))
+                                   ?? GenerationPresets.FirstOrDefault(p => p.Name == "Balanced")
+                                   ?? GenerationPresets.FirstOrDefault();
 
         await SaveWorkspaceStateAsync();
 
@@ -1545,7 +1808,10 @@ public class MainViewModel : BaseViewModel
         SelectedImagePath = string.Empty;
         SelectedGalleryImagePath = string.Empty;
         SelectedImagePaths.Clear();
+
+        GeneratedImagePaths.Clear();
         GeneratedImagePath = string.Empty;
+        SelectedGeneratedGalleryImagePath = string.Empty;
 
         PromptOverride = string.Empty;
         NegativePromptOverride = string.Empty;
@@ -1651,28 +1917,46 @@ public class MainViewModel : BaseViewModel
                 return;
             }
 
-            UpdateStatusUi("Stahuji vygenerovaný obrázek...", true);
+            UpdateStatusUi("Stahuji vygenerované obrázky...", true);
 
-            var fileResult = await _apiClientService.DownloadImageToTempFileAsync(result.ImagePath!);
+            var imageUrls = ExtractGeneratedImageUrls(LastResponseJson, SelectedServer.BaseUrl);
 
-            if (fileResult.FilePath == null)
+            if (!imageUrls.Any() && !string.IsNullOrWhiteSpace(result.ImagePath))
             {
-                UpdateStatusUi("Stažení obrázku selhalo", false);
+                imageUrls.Add(result.ImagePath);
+            }
+
+            var downloadedFiles = await DownloadGeneratedImagesAsync(imageUrls);
+
+            if (!downloadedFiles.Any())
+            {
+                UpdateStatusUi("Stažení obrázků selhalo", false);
 
                 MessageBox.Show(
-                    fileResult.ErrorMessage ?? "Obrázek byl vygenerován, ale nepodařilo se ho stáhnout.",
-                    "Chyba načtení obrázku",
+                    "Obrázky byly vygenerovány, ale nepodařilo se je stáhnout.",
+                    "Chyba načtení obrázků",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
                 return;
             }
 
-            GeneratedImagePath = fileResult.FilePath;
+            GeneratedImagePaths.Clear();
+
+            foreach (var file in downloadedFiles)
+            {
+                GeneratedImagePaths.Add(file);
+            }
+
+            GeneratedImagePath = GeneratedImagePaths.FirstOrDefault();
+            SelectedGeneratedGalleryImagePath = GeneratedImagePath;
 
             if (Application.Current.MainWindow is MainWindow previewWindow)
             {
-                previewWindow.SetPreviewImage(fileResult.FilePath);
+                if (!string.IsNullOrWhiteSpace(GeneratedImagePath))
+                {
+                    previewWindow.SetPreviewImage(GeneratedImagePath);
+                }
 
                 if (!string.IsNullOrWhiteSpace(SelectedImagePath) && File.Exists(SelectedImagePath))
                 {
@@ -1682,8 +1966,19 @@ public class MainViewModel : BaseViewModel
 
             UpdateStatusUi("Ukládám do historie...", true);
 
-            var storedInputPath = CopyToAppStorage(SelectedImagePath!, AppPaths.InputsDirectory);
-            var storedOutputPath = CopyToAppStorage(fileResult.FilePath, AppPaths.OutputsDirectory);
+            var storedInputPath = CopyToAppStorage(SelectedImagePath!, AppPaths.GetTodayInputsDirectory());
+
+            var storedGeneratedPaths = new List<string>();
+            foreach (var generatedPath in GeneratedImagePaths)
+            {
+                if (!string.IsNullOrWhiteSpace(generatedPath) && File.Exists(generatedPath))
+                {
+                    storedGeneratedPaths.Add(CopyToAppStorage(generatedPath, AppPaths.GetTodayOutputsDirectory()));
+                }
+            }
+
+            var storedOutputPath = storedGeneratedPaths.FirstOrDefault() ?? string.Empty;
+
 
             var historyItem = new HistoryItem
             {
@@ -1693,6 +1988,7 @@ public class MainViewModel : BaseViewModel
                 ModelName = SelectedModel?.Name ?? string.Empty,
                 SourceImagePath = storedInputPath,
                 GeneratedImagePath = storedOutputPath,
+                GeneratedImagePathsJson = SerializeGeneratedImagePaths(storedGeneratedPaths),
                 PromptOverride = PromptOverride,
                 NegativePromptOverride = NegativePromptOverride,
                 FinalPrompt = FinalPrompt,
@@ -1702,7 +1998,6 @@ public class MainViewModel : BaseViewModel
                 Seed = GetEffectiveSeed(),
                 UsedRandomSeed = UseRandomSeed,
             };
-
             await _historyService.AddAsync(historyItem);
             HistoryItems.Insert(0, historyItem);
             ApplyHistoryFilter();
@@ -1781,28 +2076,46 @@ public class MainViewModel : BaseViewModel
                 return;
             }
 
-            UpdateStatusUi("Stahuji vygenerovaný obrázek...", true);
+            UpdateStatusUi("Stahuji vygenerované obrázky...", true);
 
-            var fileResult = await _apiClientService.DownloadImageToTempFileAsync(result.ImagePath!);
+            var imageUrls = ExtractGeneratedImageUrls(LastResponseJson, SelectedServer.BaseUrl);
 
-            if (fileResult.FilePath == null)
+            if (!imageUrls.Any() && !string.IsNullOrWhiteSpace(result.ImagePath))
             {
-                UpdateStatusUi("Stažení obrázku selhalo", false);
+                imageUrls.Add(result.ImagePath);
+            }
+
+            var downloadedFiles = await DownloadGeneratedImagesAsync(imageUrls);
+
+            if (!downloadedFiles.Any())
+            {
+                UpdateStatusUi("Stažení obrázků selhalo", false);
 
                 MessageBox.Show(
-                    fileResult.ErrorMessage ?? "Nepodařilo se stáhnout obrázek.",
-                    "Chyba",
+                    "Obrázky byly vygenerovány, ale nepodařilo se je stáhnout.",
+                    "Chyba načtení obrázků",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
                 return;
             }
 
-            GeneratedImagePath = fileResult.FilePath;
+            GeneratedImagePaths.Clear();
+
+            foreach (var file in downloadedFiles)
+            {
+                GeneratedImagePaths.Add(file);
+            }
+
+            GeneratedImagePath = GeneratedImagePaths.FirstOrDefault();
+            SelectedGeneratedGalleryImagePath = GeneratedImagePath;
 
             if (Application.Current.MainWindow is MainWindow previewWindow)
             {
-                previewWindow.SetPreviewImage(fileResult.FilePath);
+                if (!string.IsNullOrWhiteSpace(GeneratedImagePath))
+                {
+                    previewWindow.SetPreviewImage(GeneratedImagePath);
+                }
 
                 if (!string.IsNullOrWhiteSpace(SelectedImagePath) && File.Exists(SelectedImagePath))
                 {
@@ -1815,10 +2128,19 @@ public class MainViewModel : BaseViewModel
             string storedInputPath = string.Empty;
             if (!string.IsNullOrWhiteSpace(SelectedImagePath) && File.Exists(SelectedImagePath))
             {
-                storedInputPath = CopyToAppStorage(SelectedImagePath, AppPaths.InputsDirectory);
+                storedInputPath = CopyToAppStorage(SelectedImagePath, AppPaths.GetTodayInputsDirectory());
             }
 
-            var storedOutputPath = CopyToAppStorage(fileResult.FilePath, AppPaths.OutputsDirectory);
+            var storedGeneratedPaths = new List<string>();
+            foreach (var generatedPath in GeneratedImagePaths)
+            {
+                if (!string.IsNullOrWhiteSpace(generatedPath) && File.Exists(generatedPath))
+                {
+                    storedGeneratedPaths.Add(CopyToAppStorage(generatedPath, AppPaths.GetTodayOutputsDirectory()));
+                }
+            }
+
+            var storedOutputPath = storedGeneratedPaths.FirstOrDefault() ?? string.Empty;
 
             var historyItem = new HistoryItem
             {
@@ -1828,6 +2150,7 @@ public class MainViewModel : BaseViewModel
                 ModelName = SelectedModel?.Name ?? string.Empty,
                 SourceImagePath = storedInputPath,
                 GeneratedImagePath = storedOutputPath,
+                GeneratedImagePathsJson = SerializeGeneratedImagePaths(storedGeneratedPaths),
                 PromptOverride = PromptOverride,
                 NegativePromptOverride = NegativePromptOverride,
                 FinalPrompt = FinalPrompt,
@@ -1915,33 +2238,60 @@ public class MainViewModel : BaseViewModel
                 return;
             }
 
-            UpdateStatusUi("Stahuji vygenerovaný obrázek...", true);
+            UpdateStatusUi("Stahuji vygenerované obrázky...", true);
 
-            var fileResult = await _apiClientService.DownloadImageToTempFileAsync(result.ImagePath!);
+            var imageUrls = ExtractGeneratedImageUrls(LastResponseJson, SelectedServer.BaseUrl);
 
-            if (fileResult.FilePath == null)
+            if (!imageUrls.Any() && !string.IsNullOrWhiteSpace(result.ImagePath))
             {
-                UpdateStatusUi("Stažení obrázku selhalo", false);
+                imageUrls.Add(result.ImagePath);
+            }
+
+            var downloadedFiles = await DownloadGeneratedImagesAsync(imageUrls);
+
+            if (!downloadedFiles.Any())
+            {
+                UpdateStatusUi("Stažení obrázků selhalo", false);
 
                 MessageBox.Show(
-                    fileResult.ErrorMessage ?? "Nepodařilo se stáhnout obrázek.",
-                    "Chyba",
+                    "Obrázky byly vygenerovány, ale nepodařilo se je stáhnout.",
+                    "Chyba načtení obrázků",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
 
                 return;
             }
 
-            GeneratedImagePath = fileResult.FilePath;
+            GeneratedImagePaths.Clear();
+
+            foreach (var file in downloadedFiles)
+            {
+                GeneratedImagePaths.Add(file);
+            }
+
+            GeneratedImagePath = GeneratedImagePaths.FirstOrDefault();
+            SelectedGeneratedGalleryImagePath = GeneratedImagePath;
 
             if (Application.Current.MainWindow is MainWindow previewWindow)
             {
-                previewWindow.SetPreviewImage(fileResult.FilePath);
+                if (!string.IsNullOrWhiteSpace(GeneratedImagePath))
+                {
+                    previewWindow.SetPreviewImage(GeneratedImagePath);
+                }
             }
 
             UpdateStatusUi("Ukládám do historie...", true);
 
-            var storedOutputPath = CopyToAppStorage(fileResult.FilePath, AppPaths.OutputsDirectory);
+            var storedGeneratedPaths = new List<string>();
+            foreach (var generatedPath in GeneratedImagePaths)
+            {
+                if (!string.IsNullOrWhiteSpace(generatedPath) && File.Exists(generatedPath))
+                {
+                    storedGeneratedPaths.Add(CopyToAppStorage(generatedPath, AppPaths.GetTodayOutputsDirectory()));
+                }
+            }
+
+            var storedOutputPath = storedGeneratedPaths.FirstOrDefault() ?? string.Empty;
 
             var historyItem = new HistoryItem
             {
@@ -1951,6 +2301,7 @@ public class MainViewModel : BaseViewModel
                 ModelName = SelectedModel?.Name ?? string.Empty,
                 SourceImagePath = string.Empty,
                 GeneratedImagePath = storedOutputPath,
+                GeneratedImagePathsJson = SerializeGeneratedImagePaths(storedGeneratedPaths),
                 PromptOverride = PromptOverride,
                 NegativePromptOverride = NegativePromptOverride,
                 FinalPrompt = FinalPrompt,
@@ -2048,48 +2399,26 @@ public class MainViewModel : BaseViewModel
 
     #region Helper Methods
 
-    private async Task SaveGeneratedImageAsAsync()
+    private string SerializeGeneratedImagePaths(IEnumerable<string> paths)
     {
-        if (string.IsNullOrWhiteSpace(GeneratedImagePath) || !File.Exists(GeneratedImagePath))
-            return;
+        return JsonSerializer.Serialize(paths.ToList());
+    }
 
-        var defaultFileName = $"generated_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(GeneratedImagePath)}";
-
-        var dialog = new SaveFileDialog
-        {
-            Title = "Uložit vygenerovaný obrázek jako",
-            Filter = "PNG image (*.png)|*.png|JPEG image (*.jpg)|*.jpg|All files (*.*)|*.*",
-            FileName = defaultFileName,
-            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
-        };
-
-        if (dialog.ShowDialog() != true)
-            return;
+    private List<string> DeserializeGeneratedImagePaths(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return new List<string>();
 
         try
         {
-            await using var sourceStream = File.OpenRead(GeneratedImagePath);
-            await using var targetStream = File.Create(dialog.FileName);
-            await sourceStream.CopyToAsync(targetStream);
-
-            UpdateStatusUi($"Obrázek uložen: {dialog.FileName}", false);
-
-            MessageBox.Show(
-                $"Obrázek byl uložen do:\n{dialog.FileName}",
-                "Uloženo",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
         }
-        catch (Exception ex)
+        catch
         {
-            MessageBox.Show(
-                ex.ToString(),
-                "Chyba při ukládání",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            return new List<string>();
         }
     }
-    
+
     private bool CanDeleteSelectedPreset()
     {
         if (SelectedGenerationPreset == null)
@@ -2223,6 +2552,52 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    private List<string> ExtractGeneratedImageUrls(string responseJson, string baseUrl)
+    {
+        var result = new List<string>();
+
+        try
+        {
+            using var doc = JsonDocument.Parse(responseJson);
+
+            if (doc.RootElement.TryGetProperty("generated_filenames", out var filenamesElement) &&
+                filenamesElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in filenamesElement.EnumerateArray())
+                {
+                    var filename = item.GetString();
+                    if (!string.IsNullOrWhiteSpace(filename))
+                    {
+                        result.Add($"{baseUrl.TrimEnd('/')}/images/{filename}");
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+
+        return result;
+    }
+
+    private async Task<List<string>> DownloadGeneratedImagesAsync(List<string> imageUrls)
+    {
+        var localPaths = new List<string>();
+
+        foreach (var imageUrl in imageUrls)
+        {
+            var fileResult = await _apiClientService.DownloadImageToTempFileAsync(imageUrl);
+
+            if (!string.IsNullOrWhiteSpace(fileResult.FilePath))
+            {
+                localPaths.Add(fileResult.FilePath);
+            }
+        }
+
+        return localPaths;
+    }
+
     private void UpdateStatusUi(string message, bool isBusy)
     {
         StatusMessage = message;
@@ -2251,6 +2626,9 @@ public class MainViewModel : BaseViewModel
         SelectedImagePaths.Clear();
         SelectedGalleryImagePath = string.Empty;
         SelectedImagePath = string.Empty;
+
+        GeneratedImagePaths.Clear();
+        SelectedGeneratedGalleryImagePath = string.Empty;
         GeneratedImagePath = string.Empty;
 
         PromptOverride = string.Empty;
@@ -2302,6 +2680,7 @@ public class MainViewModel : BaseViewModel
         GenerationHeight = 512;
         GenerationSteps = 12;
         GenerationGuidanceScale = 6.5;
+        NumberOfImages = 1;
         UseRandomSeed = true;
         GenerationSeed = 42;
 
@@ -2358,6 +2737,16 @@ public class MainViewModel : BaseViewModel
             return false;
         }
 
+        if (NumberOfImages < 1 || NumberOfImages > 16)
+        {
+            MessageBox.Show(
+                "Počet obrázků musí být mezi 1 a 16.",
+                "Neplatná hodnota",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return false;
+        }
+
         if (!UseRandomSeed && GenerationSeed < 0)
         {
             MessageBox.Show(
@@ -2378,6 +2767,65 @@ public class MainViewModel : BaseViewModel
 
         Clipboard.SetText(FinalNegativePrompt);
         UpdateStatusUi("Final negative prompt copied", false);
+    }
+
+    private async Task SaveGeneratedImageAsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(GeneratedImagePath) || !File.Exists(GeneratedImagePath))
+            return;
+
+        var defaultFileName = $"generated_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(GeneratedImagePath)}";
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Uložit vygenerovaný obrázek jako",
+            Filter = "PNG image (*.png)|*.png|JPEG image (*.jpg)|*.jpg|All files (*.*)|*.*",
+            FileName = defaultFileName,
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        try
+        {
+            await using var sourceStream = File.OpenRead(GeneratedImagePath);
+            await using var targetStream = File.Create(dialog.FileName);
+            await sourceStream.CopyToAsync(targetStream);
+
+            UpdateStatusUi($"Obrázek uložen: {dialog.FileName}", false);
+
+            MessageBox.Show(
+                $"Obrázek byl uložen do:\n{dialog.FileName}",
+                "Uloženo",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                ex.ToString(),
+                "Chyba při ukládání",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void OpenGeneratedImageFolder()
+    {
+        if (string.IsNullOrWhiteSpace(GeneratedImagePath) || !File.Exists(GeneratedImagePath))
+            return;
+
+        var folder = Path.GetDirectoryName(GeneratedImagePath);
+        if (string.IsNullOrWhiteSpace(folder))
+            return;
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments = $"\"{folder}\"",
+            UseShellExecute = true
+        });
     }
 
     #endregion

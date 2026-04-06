@@ -1,4 +1,6 @@
-﻿namespace desktop_cshar.Models;
+﻿using System.Text.Json;
+
+namespace desktop_cshar.Models;
 
 public class HistoryItem
 {
@@ -31,6 +33,8 @@ public class HistoryItem
     
     public string ModelId { get; set; } = string.Empty;
     public string ModelName { get; set; } = string.Empty;
+    
+    public string GeneratedImagePathsJson { get; set; } = string.Empty;
 
     public string ShortOperationType => OperationType switch
     {
@@ -45,4 +49,26 @@ public class HistoryItem
 
     public string DisplayName =>
         $"{CreatedAtUtc:yyyy-MM-dd HH:mm:ss} | {ServerName} | {OperationType}";
+    
+    public int GeneratedImagesCount
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(GeneratedImagePathsJson))
+            {
+                try
+                {
+                    var list = JsonSerializer.Deserialize<List<string>>(GeneratedImagePathsJson);
+                    if (list != null && list.Any())
+                        return list.Count;
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+
+            return string.IsNullOrWhiteSpace(GeneratedImagePath) ? 0 : 1;
+        }
+    }
 }

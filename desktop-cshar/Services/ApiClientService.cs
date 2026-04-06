@@ -280,4 +280,60 @@ public class ApiClientService
             return false;
         }
     }
+    
+    public async Task<string?> StartGenerateJobAsync(
+        string baseUrl,
+        string prompt,
+        string negativePrompt,
+        int width,
+        int height,
+        int numInferenceSteps,
+        double guidanceScale,
+        int? seed,
+        string? modelId,
+        int numberOfImages)
+    {
+        var payload = new
+        {
+            prompt = prompt,
+            negative_prompt = negativePrompt,
+            width = width,
+            height = height,
+            num_inference_steps = numInferenceSteps,
+            guidance_scale = guidanceScale,
+            seed = seed,
+            model_id = modelId,
+            num_images = Math.Max(1, numberOfImages)
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync($"{baseUrl.TrimEnd('/')}/generate-job", content);
+        response.EnsureSuccessStatusCode();
+
+        var responseText = await response.Content.ReadAsStringAsync();
+
+        using var doc = JsonDocument.Parse(responseText);
+
+        if (!doc.RootElement.TryGetProperty("job_id", out var jobIdElement))
+            return null;
+
+        return jobIdElement.GetString();
+    }
+
+    public async Task<GenerationJobStatus?> GetJobStatusAsync(string baseUrl, string jobId)
+    {
+        var response = await _httpClient.GetAsync($"{baseUrl.TrimEnd('/')}/jobs/{jobId}");
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        return JsonSerializer.Deserialize<GenerationJobStatus>(json, options);
+    }
 }
