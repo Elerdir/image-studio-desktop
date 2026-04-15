@@ -14,12 +14,41 @@ public class ApiClientService
         Timeout = TimeSpan.FromMinutes(30)
     };
 
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     public async Task<bool> TestConnectionAsync(ServerProfile server)
     {
         try
         {
             var url = $"{server.BaseUrl.TrimEnd('/')}/health";
             var response = await _httpClient.GetAsync(url);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    public async Task<bool> UninstallModelAsync(string baseUrl, string modelId)
+    {
+        try
+        {
+            var payload = new
+            {
+                model_id = modelId
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(
+                $"{baseUrl.TrimEnd('/')}/models/uninstall",
+                content);
+
             return response.IsSuccessStatusCode;
         }
         catch
@@ -69,8 +98,6 @@ public class ApiClientService
                 };
 
                 streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
-                // Backend očekává "files"
                 content.Add(streamContent, "files", Path.GetFileName(filePath));
             }
 
@@ -85,12 +112,16 @@ public class ApiClientService
             content.Add(new StringContent(height.ToString()), "height");
             content.Add(new StringContent(numInferenceSteps.ToString()), "num_inference_steps");
             content.Add(new StringContent(guidanceScale.ToString(System.Globalization.CultureInfo.InvariantCulture)), "guidance_scale");
-            content.Add(new StringContent(modelId ?? string.Empty), "model_id");
             content.Add(new StringContent(Math.Max(1, numberOfImages).ToString()), "num_images");
 
             if (seed.HasValue)
             {
                 content.Add(new StringContent(seed.Value.ToString()), "seed");
+            }
+
+            if (!string.IsNullOrWhiteSpace(modelId))
+            {
+                content.Add(new StringContent(modelId), "model_id");
             }
 
             var url = $"{baseUrl.TrimEnd('/')}/analyze-and-generate";
@@ -194,13 +225,13 @@ public class ApiClientService
         {
             var payload = new
             {
-                prompt = prompt,
+                prompt,
                 negative_prompt = negativePrompt,
-                width = width,
-                height = height,
+                width,
+                height,
                 num_inference_steps = numInferenceSteps,
                 guidance_scale = guidanceScale,
-                seed = seed,
+                seed,
                 model_id = modelId,
                 num_images = Math.Max(1, numberOfImages)
             };
@@ -248,12 +279,7 @@ public class ApiClientService
 
         var json = await response.Content.ReadAsStringAsync();
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
-        return JsonSerializer.Deserialize<List<ModelInfo>>(json, options)
+        return JsonSerializer.Deserialize<List<ModelInfo>>(json, JsonOptions)
                ?? new List<ModelInfo>();
     }
 
@@ -280,7 +306,7 @@ public class ApiClientService
             return false;
         }
     }
-    
+
     public async Task<string?> StartGenerateJobAsync(
         string baseUrl,
         string prompt,
@@ -295,13 +321,13 @@ public class ApiClientService
     {
         var payload = new
         {
-            prompt = prompt,
+            prompt,
             negative_prompt = negativePrompt,
-            width = width,
-            height = height,
+            width,
+            height,
             num_inference_steps = numInferenceSteps,
             guidance_scale = guidanceScale,
-            seed = seed,
+            seed,
             model_id = modelId,
             num_images = Math.Max(1, numberOfImages)
         };
@@ -329,11 +355,204 @@ public class ApiClientService
 
         var json = await response.Content.ReadAsStringAsync();
 
+        return JsonSerializer.Deserialize<GenerationJobStatus>(json, JsonOptions);
+    }
+
+    public async Task<string?> StartAnalyzeAndGenerateJobAsync(
+        IEnumerable<string> imagePaths,
+        string baseUrl,
+        string promptOverride,
+        string negativePromptOverride,
+        int width,
+        int height,
+        int steps,
+        double guidanceScale,
+        int? seed,
+        string? modelId,
+        int numImages)
+    {
+        var openedStreams = new List<FileStream>();
+        var streamContents = new List<StreamContent>();
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+
+            foreach (var imagePath in imagePaths)
+            {
+                if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
+                    continue;
+
+                var fileStream = File.OpenRead(imagePath);
+                openedStreams.Add(fileStream);
+
+                var fileContent = new StreamContent(fileStream);
+                streamContents.Add(fileContent);
+
+                var extension = Path.GetExtension(imagePath).ToLowerInvariant();
+                var contentType = extension switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" => "image/jpeg",
+                    ".jpeg" => "image/jpeg",
+                    _ => "application/octet-stream"
+                };
+
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                content.Add(fileContent, "files", Path.GetFileName(imagePath));
+            }
+
+            if (openedStreams.Count == 0)
+                return null;
+
+            content.Add(new StringContent(promptOverride ?? string.Empty), "prompt_override");
+            content.Add(new StringContent(negativePromptOverride ?? string.Empty), "negative_prompt_override");
+            content.Add(new StringContent(width.ToString()), "width");
+            content.Add(new StringContent(height.ToString()), "height");
+            content.Add(new StringContent(steps.ToString()), "num_inference_steps");
+            content.Add(new StringContent(guidanceScale.ToString(System.Globalization.CultureInfo.InvariantCulture)), "guidance_scale");
+            content.Add(new StringContent(Math.Max(1, numImages).ToString()), "num_images");
+
+            if (seed.HasValue)
+                content.Add(new StringContent(seed.Value.ToString()), "seed");
+
+            if (!string.IsNullOrWhiteSpace(modelId))
+                content.Add(new StringContent(modelId), "model_id");
+
+            var response = await _httpClient.PostAsync(
+                $"{baseUrl.TrimEnd('/')}/analyze-and-generate-job",
+                content);
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("job_id", out var jobIdElement))
+                return jobIdElement.GetString();
+
+            return null;
+        }
+        finally
+        {
+            foreach (var streamContent in streamContents)
+            {
+                streamContent.Dispose();
+            }
+
+            foreach (var fileStream in openedStreams)
+            {
+                await fileStream.DisposeAsync();
+            }
+        }
+    }
+
+    public async Task CancelJobAsync(string baseUrl, string jobId)
+    {
+        var response = await _httpClient.PostAsync(
+            $"{baseUrl.TrimEnd('/')}/jobs/{jobId}/cancel",
+            null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseText = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to cancel job. HTTP {(int)response.StatusCode}: {responseText}");
+        }
+    }
+    
+    public async Task<RuntimeInfo?> GetRuntimeInfoAsync(string baseUrl)
+    {
+        var response = await _httpClient.GetAsync($"{baseUrl.TrimEnd('/')}/runtime-info");
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<RuntimeInfo>(json, JsonOptions);
+    }
+    
+    public async Task<List<DiscoverModelItem>> GetInstalledDiscoverModelsAsync(string baseUrl, int limit = 50)
+    {
+        var response = await _httpClient.GetAsync(
+            $"{baseUrl.TrimEnd('/')}/models/discover?installed_only=true&limit={limit}");
+
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        return JsonSerializer.Deserialize<GenerationJobStatus>(json, options);
+        return JsonSerializer.Deserialize<List<DiscoverModelItem>>(json, options)
+               ?? new List<DiscoverModelItem>();
+    }
+
+    public async Task<List<DiscoverModelItem>> DiscoverModelsAsync(
+        string baseUrl,
+        string search,
+        int limit = 20,
+        string? task = "text-to-image",
+        bool onlyDiffusers = true,
+        bool onlySdxl = false)
+    {
+        var query = new List<string>
+        {
+            $"search={Uri.EscapeDataString(search ?? string.Empty)}",
+            $"limit={limit}"
+        };
+
+        if (!string.IsNullOrWhiteSpace(task))
+            query.Add($"task={Uri.EscapeDataString(task)}");
+
+        query.Add($"only_diffusers={onlyDiffusers.ToString().ToLowerInvariant()}");
+        query.Add($"only_sdxl={onlySdxl.ToString().ToLowerInvariant()}");
+
+        var url = $"{baseUrl.TrimEnd('/')}/models/discover?{string.Join("&", query)}";
+
+        var response = await _httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        return JsonSerializer.Deserialize<List<DiscoverModelItem>>(json, options)
+               ?? new List<DiscoverModelItem>();
+    }
+    
+    public async Task<bool> UnloadModelAsync(string baseUrl, string? modelId, bool unloadAll)
+    {
+        var payload = new
+        {
+            model_id = modelId,
+            unload_all = unloadAll
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync($"{baseUrl.TrimEnd('/')}/models/unload", content);
+
+        return response.IsSuccessStatusCode;
+    }
+    
+    public async Task<List<GenerationJobStatus>> GetJobsAsync(string baseUrl)
+    {
+        var response = await _httpClient.GetAsync($"{baseUrl.TrimEnd('/')}/jobs");
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        return JsonSerializer.Deserialize<List<GenerationJobStatus>>(json, options)
+               ?? new List<GenerationJobStatus>();
     }
 }

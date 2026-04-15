@@ -1,0 +1,31 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F6F7F9" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F3F3F3" />
+    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="#FAFAFA" />
+    <SolidColorBrush x:Key="BorderBrushTheme" Color="#D9D9D9" />
+
+    <SolidColorBrush x:Key="TextBrushTheme" Color="#1F1F1F" />
+    <SolidColorBrush x:Key="MutedTextBrushTheme" Color="#666666" />
+    <SolidColorBrush x:Key="SubtleTextBrushTheme" Color="#555555" />
+
+    <SolidColorBrush x:Key="AccentBrushTheme" Color="#0078D4" />
+    <SolidColorBrush x:Key="AccentBrushHoverTheme" Color="#106EBE" />
+    <SolidColorBrush x:Key="AccentForegroundBrushTheme" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="WarningBrushTheme" Color="#C42B1C" />
+    <SolidColorBrush x:Key="WarningBackgroundBrushTheme" Color="#FFF3CD" />
+    <SolidColorBrush x:Key="WarningBorderBrushTheme" Color="#FFEEBA" />
+    <SolidColorBrush x:Key="WarningForegroundBrushTheme" Color="#856404" />
+
+    <SolidColorBrush x:Key="SuccessBrushTheme" Color="#107C10" />
+    
+    <SolidColorBrush x:Key="ControlDisabledBackgroundBrushTheme" Color="#E6E6E6" />
+    <SolidColorBrush x:Key="ControlDisabledForegroundBrushTheme" Color="#7A7A7A" />
+    <SolidColorBrush x:Key="ControlHoverBrushTheme" Color="#F0F0F0" />
+    <SolidColorBrush x:Key="ControlPressedBrushTheme" Color="#E4E4E4" />
+    <SolidColorBrush x:Key="TabSelectedBackgroundBrushTheme" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="TabSelectedForegroundBrushTheme" Color="#1F1F1F" />
+</ResourceDictionary>

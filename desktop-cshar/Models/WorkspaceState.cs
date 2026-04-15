@@ -22,4 +22,9 @@ public class WorkspaceState
     public int SelectedTabIndex { get; set; } = 0;
     
     public string SelectedModelId { get; set; } = string.Empty;
+    
+    public WorkspaceMode SelectedWorkspaceMode { get; set; } = WorkspaceMode.TextToImage;
+
+    public string MainPrompt { get; set; } = string.Empty;
+    public string MainNegativePrompt { get; set; } = string.Empty;
 }

@@ -294,14 +294,9 @@ public partial class MainWindow : Window
             await _serverProfileService.SaveAsync(servers);
         }
 
-        var hasAnyServer = await _serverProfileService.HasAnyServerAsync();
-        
-        /*MessageBox.Show(AppPaths.ServersFilePath);
-
-        MessageBox.Show(
-            hasAnyServer ? "Server byl nalezen nebo vytvořen." : "Žádný server není dostupný.",
-            "Test serverů",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);*/
+        if (DataContext is MainViewModel vm)
+        {
+            await vm.InitializeAfterStartupAsync();
+        }
     }
 }

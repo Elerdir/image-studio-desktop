@@ -4,7 +4,10 @@
         Title="Image Studio"
         Height="900"
         Width="1300"
-        WindowStartupLocation="CenterScreen">
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource TextBrushTheme}"
+        WindowStartupLocation="CenterScreen"
+        Loaded="MainWindow_Loaded">
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -16,47 +19,113 @@
 
         <!-- TOP BAR -->
         <Border Grid.Row="0"
-                Background="#F3F3F3"
-                BorderBrush="#DDD"
+                Background="{DynamicResource SurfaceAltBrush}"
+                BorderBrush="{DynamicResource BorderBrushTheme}"
                 BorderThickness="1"
                 Padding="10"
                 CornerRadius="6">
-            <DockPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal"
-                            DockPanel.Dock="Left">
-                    <TextBlock Text="Server:"
-                               VerticalAlignment="Center"
-                               Margin="0,0,8,0" />
+                <!-- TOP ROW -->
+                <DockPanel Grid.Row="0">
 
-                    <ComboBox Width="260"
-                              ItemsSource="{Binding Servers}"
-                              SelectedItem="{Binding SelectedServer}"
-                              DisplayMemberPath="DisplayName" />
-                </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                DockPanel.Dock="Left">
+                        <TextBlock Text="Server:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0" />
 
-                <StackPanel Orientation="Horizontal"
-                            DockPanel.Dock="Right">
-                    <Button Content="Add"
-                            Command="{Binding AddServerCommand}"
-                            Margin="0,0,6,0" />
-                    <Button Content="Edit"
-                            Command="{Binding EditServerCommand}"
-                            Margin="0,0,6,0" />
-                    <Button Content="Save"
-                            Command="{Binding SaveServersCommand}"
-                            Margin="0,0,6,0" />
-                    <Button Content="Default"
-                            Command="{Binding SetDefaultServerCommand}"
-                            Margin="0,0,6,0" />
-                    <Button Content="Delete"
-                            Command="{Binding DeleteServerCommand}"
-                            Margin="0,0,6,0" />
-                    <Button Content="Test"
-                            Command="{Binding TestConnectionCommand}" />
-                </StackPanel>
+                        <ComboBox Width="260"
+                                  ItemsSource="{Binding Servers}"
+                                  SelectedItem="{Binding SelectedServer}"
+                                  DisplayMemberPath="DisplayName" />
 
-            </DockPanel>
+                        <TextBlock Text="Theme:"
+                                   VerticalAlignment="Center"
+                                   Margin="16,0,8,0" />
+
+                        <ComboBox Width="110"
+                                  ItemsSource="{Binding AvailableThemeModes}"
+                                  SelectedItem="{Binding SelectedThemeMode}" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal"
+                                DockPanel.Dock="Right">
+                        <Button Content="Add"
+                                Command="{Binding AddServerCommand}"
+                                Margin="0,0,6,0" />
+                        <Button Content="Edit"
+                                Command="{Binding EditServerCommand}"
+                                Margin="0,0,6,0" />
+                        <Button Content="Save"
+                                Command="{Binding SaveServersCommand}"
+                                Margin="0,0,6,0" />
+                        <Button Content="Default"
+                                Command="{Binding SetDefaultServerCommand}"
+                                Margin="0,0,6,0" />
+                        <Button Content="Delete"
+                                Command="{Binding DeleteServerCommand}"
+                                Margin="0,0,6,0" />
+                        <Button Content="Test"
+                                Command="{Binding TestConnectionCommand}" />
+                    </StackPanel>
+
+                </DockPanel>
+
+                <!-- RUNTIME INFO -->
+                <Border Grid.Row="2"
+                        Background="{DynamicResource SurfaceMutedBrush}"
+                        BorderBrush="{DynamicResource BorderBrushTheme}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="8">
+                    <StackPanel>
+
+                        <WrapPanel>
+                            <TextBlock
+                                Text="{Binding RuntimeDeviceText, FallbackValue=Device: unknown, TargetNullValue=Device: unknown}"
+                                Margin="0,0,16,4"
+                                FontWeight="SemiBold"
+                                Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                            <TextBlock
+                                Text="{Binding RuntimeGpuText, FallbackValue=GPU: unknown, TargetNullValue=GPU: unknown}"
+                                Margin="0,0,16,4"
+                                Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                            <TextBlock
+                                Text="{Binding RuntimeMemoryText, FallbackValue=VRAM: unknown, TargetNullValue=VRAM: unknown}"
+                                Margin="0,0,16,4"
+                                Foreground="{DynamicResource TextPrimaryBrush}" />
+
+                            <TextBlock
+                                Text="{Binding RuntimeTorchText, FallbackValue=Torch: unknown, TargetNullValue=Torch: unknown}"
+                                Margin="0,0,16,4"
+                                Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="{Binding RuntimeServerVersionText}"
+                                       Margin="0,0,16,4"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </WrapPanel>
+
+                        <TextBlock
+                            Text="{Binding RuntimeModelsText, FallbackValue=Loaded models: unknown, TargetNullValue=Loaded models: unknown}"
+                            Margin="0,2,0,0"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            TextWrapping="Wrap" />
+
+                        <TextBlock Text="{Binding RuntimeWarningText, TargetNullValue=''}"
+                                   Margin="0,6,0,0"
+                                   Foreground="{DynamicResource WarningBrushTheme}"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- TABS -->
@@ -65,103 +134,199 @@
 
             <!-- WORKSPACE -->
             <TabItem Header="Workspace">
-
                 <Grid x:Name="WorkspaceGrid"
                       Margin="10"
                       AllowDrop="True"
                       DragOver="WorkspaceGrid_DragOver"
                       DragLeave="WorkspaceGrid_DragLeave"
-                      Drop="WorkspaceGrid_Drop"
-                      Background="Transparent">
+                      Drop="WorkspaceGrid_Drop">
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="520" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="420" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                        <!-- LEFT -->
-                        <ScrollViewer Grid.Column="0"
-                                      VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled">
-                            <StackPanel>
+                    <!-- LEFT PANEL -->
+                    <ScrollViewer Grid.Column="0"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
 
-                                <!-- INPUT -->
-                                <GroupBox Header="Input"
-                                          Margin="0,0,0,10">
-                                    <StackPanel Margin="6">
-                                        <Button Content="Select Image(s)"
+                            <!-- MODE -->
+                            <GroupBox Header="Mode"
+                                      Margin="0,0,0,10">
+                                <StackPanel Margin="6">
+                                    <TextBlock Text="{Binding SelectedWorkspaceModeDisplay}"
+                                               Margin="0,4,0,0"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    <ComboBox ItemsSource="{Binding WorkspaceModes}"
+                                              SelectedValuePath="Mode"
+                                              DisplayMemberPath="Display"
+                                              SelectedValue="{Binding SelectedWorkspaceMode}"
+                                              Height="30" />
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- INPUT -->
+                            <GroupBox Header="Input"
+                                      Margin="0,0,0,10">
+                                <GroupBox.Style>
+                                    <Style TargetType="GroupBox">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsImageAnalyzeMode}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </GroupBox.Style>
+
+                                <StackPanel Margin="6">
+
+                                    <TextBlock Text="Selected source images"
+                                               Margin="0,0,0,4" />
+
+                                    <ListBox ItemsSource="{Binding SelectedImagePaths}"
+                                             SelectedItem="{Binding SelectedGalleryImagePath}"
+                                             Height="90"
+                                             Margin="0,0,0,8" />
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Select Images"
                                                 Command="{Binding SelectImageCommand}"
-                                                Height="32" />
+                                                Height="30"
+                                                Margin="0,0,8,0" />
 
-                                        <TextBlock Text="{Binding SelectedImagePath}"
-                                                   FontSize="10"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,6,0,0" />
-
-                                        <TextBlock
-                                            Text="{Binding SelectedImagePaths.Count, StringFormat=Selected images: {0}}"
-                                            Margin="0,6,0,8"
-                                            FontWeight="SemiBold" />
-
-                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                                      VerticalScrollBarVisibility="Disabled">
-                                            <ListBox ItemsSource="{Binding SelectedImagePaths}"
-                                                     SelectedItem="{Binding SelectedGalleryImagePath, Mode=TwoWay}"
-                                                     BorderThickness="0"
-                                                     Background="Transparent"
-                                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                                <ListBox.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" />
-                                                    </ItemsPanelTemplate>
-                                                </ListBox.ItemsPanel>
-
-                                                <ListBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border BorderBrush="#DDD"
-                                                                BorderThickness="1"
-                                                                CornerRadius="4"
-                                                                Padding="4"
-                                                                Margin="0,0,8,0"
-                                                                Background="White">
-                                                            <Image Source="{Binding}"
-                                                                   Width="72"
-                                                                   Height="72"
-                                                                   Stretch="UniformToFill" />
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ListBox.ItemTemplate>
-
-                                                <ListBox.ItemContainerStyle>
-                                                    <Style TargetType="ListBoxItem">
-                                                        <Setter Property="Padding" Value="0" />
-                                                        <Setter Property="Margin" Value="0" />
-                                                        <Setter Property="BorderThickness" Value="0" />
-                                                        <Setter Property="Background" Value="Transparent" />
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsSelected" Value="True">
-                                                                <Setter Property="Background" Value="Transparent" />
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ListBox.ItemContainerStyle>
-                                            </ListBox>
-                                        </ScrollViewer>
+                                        <Button Content="Clear Workspace"
+                                                Command="{Binding ClearWorkspaceCommand}"
+                                                Height="30" />
                                     </StackPanel>
-                                </GroupBox>
+                                </StackPanel>
+                            </GroupBox>
 
-                                <!-- PROMPTING -->
-                                <GroupBox Header="Prompting"
-                                          Margin="0,0,0,10">
-                                    <StackPanel Margin="6">
+                            <!-- PROMPTING -->
+                            <GroupBox Header="Prompting"
+                                      Margin="0,0,0,10">
+                                <StackPanel Margin="6">
+
+                                    <!-- TEXT TO IMAGE MODE -->
+                                    <StackPanel>
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsTextToImageMode}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
+
+                                        <TextBlock Text="Prompt"
+                                                   Margin="0,0,0,4" />
+                                        <TextBox Text="{Binding MainPrompt, UpdateSourceTrigger=PropertyChanged}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="90"
+                                                 Margin="0,0,0,8" />
+
+                                        <TextBlock Text="Negative Prompt"
+                                                   Margin="0,0,0,4" />
+                                        <TextBox
+                                            Text="{Binding MainNegativePrompt, UpdateSourceTrigger=PropertyChanged}"
+                                            AcceptsReturn="True"
+                                            TextWrapping="Wrap"
+                                            Height="70"
+                                            Margin="0,0,0,8" />
+
+                                        <TextBlock Text="Final Prompt (EN)"
+                                                   Margin="0,0,0,4" />
+                                        <TextBox x:Name="FinalPromptTextBox"
+                                                 Text="{Binding FinalPrompt}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="80"
+                                                 IsReadOnly="True"
+                                                 Margin="0,0,0,6" />
+
+                                        <TextBlock Text="Original Prompt"
+                                                   Margin="0,4,0,4">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPromptPreview}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBox Text="{Binding OriginalPromptPreview}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="60"
+                                                 IsReadOnly="True"
+                                                 Margin="0,0,0,4">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPromptPreview}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+
+                                        <TextBlock Text="{Binding PromptTranslationInfo}"
+                                                   Margin="0,2,0,6"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasPromptTranslationInfo}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="Final Negative Prompt"
+                                                   Margin="0,4,0,4" />
+                                        <TextBox x:Name="FinalNegativePromptTextBox"
+                                                 Text="{Binding FinalNegativePrompt}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="80"
+                                                 IsReadOnly="True" />
+                                    </StackPanel>
+
+                                    <!-- IMAGE ANALYZE MODE -->
+                                    <StackPanel>
+                                        <StackPanel.Style>
+                                            <Style TargetType="StackPanel">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsImageAnalyzeMode}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </StackPanel.Style>
 
                                         <TextBlock Text="Prompt Override"
                                                    Margin="0,0,0,4" />
                                         <TextBox x:Name="PromptOverrideTextBox"
-                                                 Text="{Binding PromptOverride}"
+                                                 Text="{Binding PromptOverride, UpdateSourceTrigger=PropertyChanged}"
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  Height="60"
@@ -170,219 +335,177 @@
                                         <TextBlock Text="Negative Prompt Override"
                                                    Margin="0,0,0,4" />
                                         <TextBox x:Name="NegativePromptOverrideTextBox"
-                                                 Text="{Binding NegativePromptOverride}"
+                                                 Text="{Binding NegativePromptOverride, UpdateSourceTrigger=PropertyChanged}"
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  Height="60"
                                                  Margin="0,0,0,8" />
 
-                                        <TextBlock Text="Final Prompt"
+                                        <TextBlock Text="Final Prompt (EN)"
                                                    Margin="0,0,0,4" />
-                                        <TextBox x:Name="FinalPromptTextBox"
-                                                 Text="{Binding FinalPrompt}"
+                                        <TextBox Text="{Binding FinalPrompt}"
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  Height="80"
-                                                 Margin="0,0,0,8" />
+                                                 Margin="0,0,0,6" />
+
+                                        <TextBlock Text="Original Prompt"
+                                                   Margin="0,4,0,4">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPromptPreview}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBox Text="{Binding OriginalPromptPreview}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 Height="60"
+                                                 IsReadOnly="True"
+                                                 Margin="0,0,0,4">
+                                            <TextBox.Style>
+                                                <Style TargetType="TextBox">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPromptPreview}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBox.Style>
+                                        </TextBox>
+
+                                        <TextBlock Text="{Binding PromptTranslationInfo}"
+                                                   Margin="0,2,0,6"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasPromptTranslationInfo}"
+                                                                     Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
                                         <TextBlock Text="Final Negative Prompt"
-                                                   Margin="0,0,0,4" />
-                                        <TextBox x:Name="FinalNegativePromptTextBox"
-                                                 Text="{Binding FinalNegativePrompt}"
+                                                   Margin="0,4,0,4" />
+                                        <TextBox Text="{Binding FinalNegativePrompt}"
                                                  AcceptsReturn="True"
                                                  TextWrapping="Wrap"
                                                  Height="80" />
                                     </StackPanel>
-                                </GroupBox>
 
-                                <!-- GENERATION -->
-                                <GroupBox Header="Generation"
-                                          Margin="0,0,0,10">
-                                    <StackPanel Margin="6">
+                                </StackPanel>
+                            </GroupBox>
 
-                                        <TextBlock Text="Model"
-                                                   Margin="0,0,0,4" />
-                                        <Grid Margin="0,0,0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="90" />
-                                            </Grid.ColumnDefinitions>
+                            <!-- GENERATION -->
+                            <GroupBox Header="Generation"
+                                      Margin="0,0,0,10">
+                                <StackPanel Margin="6">
 
-                                            <ComboBox Grid.Column="0"
-                                                      ItemsSource="{Binding AvailableModels}"
-                                                      SelectedItem="{Binding SelectedModel}"
-                                                      DisplayMemberPath="Name"
-                                                      Height="30" />
+                                    <TextBlock Text="Model"
+                                               Margin="0,0,0,4" />
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="90" />
+                                        </Grid.ColumnDefinitions>
 
-                                            <Button Grid.Column="2"
-                                                    Content="Refresh"
-                                                    Height="30"
-                                                    Command="{Binding RefreshModelsCommand}" />
-                                        </Grid>
+                                        <ComboBox Grid.Column="0"
+                                                  ItemsSource="{Binding AvailableModels}"
+                                                  SelectedItem="{Binding SelectedModel}"
+                                                  DisplayMemberPath="Name"
+                                                  Height="30" />
 
-                                        <Border Background="#FFF3CD"
-                                                BorderBrush="#FFEEBA"
-                                                BorderThickness="1"
-                                                CornerRadius="4"
-                                                Padding="6"
-                                                Margin="0,0,0,6">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSelectedModelAvailable}"
-                                                                     Value="False">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
+                                        <Button Grid.Column="2"
+                                                Content="Refresh"
+                                                Height="30"
+                                                Command="{Binding RefreshModelsCommand}" />
+                                    </Grid>
 
-                                            <TextBlock Text="{Binding ModelWarningMessage}"
-                                                       Foreground="#856404"
-                                                       TextWrapping="Wrap" />
-                                        </Border>
+                                    <Border Background="#FFF3CD"
+                                            BorderBrush="#FFEEBA"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="6"
+                                            Margin="0,0,0,6">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelectedModelAvailable}"
+                                                                 Value="False">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
 
-                                        <Button Content="Install Selected Model"
-                                                Command="{Binding InstallModelCommand}"
-                                                Margin="0,0,0,8">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsSelectedModelAvailable}"
-                                                                     Value="False">
-                                                            <Setter Property="Visibility" Value="Visible" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+                                        <TextBlock Text="{Binding ModelWarningMessage}"
+                                                   Foreground="#856404"
+                                                   TextWrapping="Wrap" />
+                                    </Border>
 
-                                        <TextBlock Text="New model repo id"
-                                                   Margin="0,0,0,4" />
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="130" />
-                                            </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Správa modelů je v tabu Models."
+                                               Margin="0,0,0,8"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               TextWrapping="Wrap" />
 
-                                            <TextBox Grid.Column="0"
-                                                     Text="{Binding NewModelId, UpdateSourceTrigger=PropertyChanged}"
-                                                     Height="30"
-                                                     ToolTip="Např. runwayml/stable-diffusion-v1-5" />
+                                    <TextBlock Text="Preset"
+                                               Margin="0,0,0,4" />
+                                    <ComboBox ItemsSource="{Binding GenerationPresets}"
+                                              SelectedItem="{Binding SelectedGenerationPreset}"
+                                              DisplayMemberPath="DisplayName"
+                                              Height="30"
+                                              Margin="0,0,0,8" />
 
-                                            <Button Grid.Column="2"
-                                                    Content="Install New"
-                                                    Height="30"
-                                                    Command="{Binding InstallNewModelCommand}" />
-                                        </Grid>
+                                    <UniformGrid Columns="2"
+                                                 Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,6,0">
+                                            <TextBlock Text="Width" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding GenerationWidth}" Height="30" />
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0">
+                                            <TextBlock Text="Height" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding GenerationHeight}" Height="30" />
+                                        </StackPanel>
+                                    </UniformGrid>
 
-                                        <TextBlock Text="Preset"
-                                                   Margin="0,0,0,4" />
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="70" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="70" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="70" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="70" />
-                                            </Grid.ColumnDefinitions>
+                                    <UniformGrid Columns="2"
+                                                 Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,6,0">
+                                            <TextBlock Text="Steps" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding GenerationSteps}" Height="30" />
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0">
+                                            <TextBlock Text="Guidance Scale" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding GenerationGuidanceScale}" Height="30" />
+                                        </StackPanel>
+                                    </UniformGrid>
 
-                                            <ComboBox Grid.Column="0"
-                                                      ItemsSource="{Binding GenerationPresets}"
-                                                      SelectedItem="{Binding SelectedGenerationPreset}"
-                                                      DisplayMemberPath="DisplayName"
-                                                      Height="30" />
-
-                                            <Button Grid.Column="2"
-                                                    Content="Save"
-                                                    Height="30"
-                                                    Command="{Binding SaveGenerationPresetCommand}" />
-
-                                            <Button Grid.Column="4"
-                                                    Content="Rename"
-                                                    Height="30"
-                                                    Command="{Binding RenameGenerationPresetCommand}" />
-
-                                            <Button Grid.Column="6"
-                                                    Content="Delete"
-                                                    Height="30"
-                                                    Command="{Binding DeleteGenerationPresetCommand}" />
-
-                                            <Button Grid.Column="8"
-                                                    Content="Reset"
-                                                    Height="30"
-                                                    Command="{Binding ResetGenerationParametersCommand}" />
-                                        </Grid>
-
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="10" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="8" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-
-                                            <StackPanel Grid.Row="0"
-                                                        Grid.Column="0">
-                                                <TextBlock Text="Width"
-                                                           Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding GenerationWidth}" />
-                                            </StackPanel>
-
-                                            <StackPanel Grid.Row="0"
-                                                        Grid.Column="2">
-                                                <TextBlock Text="Height"
-                                                           Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding GenerationHeight}" />
-                                            </StackPanel>
-
-                                            <StackPanel Grid.Row="2"
-                                                        Grid.Column="0">
-                                                <TextBlock Text="Steps"
-                                                           Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding GenerationSteps}" />
-                                            </StackPanel>
-
-                                            <StackPanel Grid.Row="2"
-                                                        Grid.Column="2">
-                                                <TextBlock Text="Guidance Scale"
-                                                           Margin="0,0,0,4" />
-                                                <TextBox Text="{Binding GenerationGuidanceScale}" />
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <TextBlock Text="Number of images"
-                                                   Margin="0,0,0,4" />
-                                        <TextBox Text="{Binding NumberOfImages}"
-                                                 Margin="0,0,0,8" />
-
-                                        <CheckBox Content="Random Seed"
-                                                  IsChecked="{Binding UseRandomSeed}"
-                                                  Margin="0,0,0,6" />
-
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="90" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="70" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <TextBox Grid.Column="0"
-                                                     Text="{Binding GenerationSeed}">
+                                    <UniformGrid Columns="2"
+                                                 Margin="0,0,0,8">
+                                        <StackPanel Margin="0,0,6,0">
+                                            <TextBlock Text="Number of Images" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding NumberOfImages}" Height="30" />
+                                        </StackPanel>
+                                        <StackPanel Margin="6,0,0,0">
+                                            <TextBlock Text="Seed" Margin="0,0,0,4" />
+                                            <TextBox Text="{Binding GenerationSeed}"
+                                                     Height="30">
                                                 <TextBox.Style>
                                                     <Style TargetType="TextBox">
                                                         <Setter Property="IsEnabled" Value="True" />
@@ -394,242 +517,223 @@
                                                     </Style>
                                                 </TextBox.Style>
                                             </TextBox>
+                                        </StackPanel>
+                                    </UniformGrid>
 
-                                            <Button Grid.Column="2"
-                                                    Content="Randomize"
-                                                    Command="{Binding RandomizeSeedCommand}" />
+                                    <CheckBox Content="Use Random Seed"
+                                              IsChecked="{Binding UseRandomSeed}"
+                                              Margin="0,0,0,8" />
 
-                                            <Button Grid.Column="4"
-                                                    Content="Copy"
-                                                    Command="{Binding CopySeedCommand}" />
-                                        </Grid>
-
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="0,0,0,8">
+                                        <Button Content="Randomize Seed"
+                                                Command="{Binding RandomizeSeedCommand}"
+                                                Height="30"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Copy Seed"
+                                                Command="{Binding CopySeedCommand}"
+                                                Height="30" />
                                     </StackPanel>
-                                </GroupBox>
 
-                                <!-- ACTIONS -->
-                                <GroupBox Header="Actions">
-                                    <StackPanel Margin="6">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="8" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="8" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="8" />
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="8" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-
-                                            <Button Grid.Row="0"
-                                                    Grid.Column="0"
-                                                    Content="Analyze + Generate"
-                                                    Height="34"
-                                                    Command="{Binding AnalyzeAndGenerateCommand}" />
-
-                                            <Button Grid.Row="0"
-                                                    Grid.Column="2"
-                                                    Content="Generate Final"
-                                                    Height="34"
-                                                    Command="{Binding GenerateFromFinalPromptCommand}" />
-
-                                            <Button Grid.Row="2"
-                                                    Grid.Column="0"
-                                                    Content="Generate Text"
-                                                    Height="34"
-                                                    Command="{Binding GenerateFromTextCommand}" />
-
-                                            <Button Grid.Row="2"
-                                                    Grid.Column="2"
-                                                    Content="New Session"
-                                                    Height="34"
-                                                    Command="{Binding NewSessionCommand}" />
-
-                                            <Button Grid.Row="4"
-                                                    Grid.Column="0"
-                                                    Content="Clear"
-                                                    Height="34"
-                                                    Command="{Binding ClearWorkspaceCommand}" />
-
-                                            <Button Grid.Row="4"
-                                                    Grid.Column="2"
-                                                    Content="Copy JSON"
-                                                    Height="34"
-                                                    Command="{Binding CopyJsonCommand}" />
-
-                                            <Button Grid.Row="6"
-                                                    Grid.Column="0"
-                                                    Content="Copy Final Prompt"
-                                                    Height="34"
-                                                    Command="{Binding CopyFinalPromptCommand}" />
-
-                                            <Button Grid.Row="6"
-                                                    Grid.Column="2"
-                                                    Content="Copy Final Negative"
-                                                    Height="34"
-                                                    Command="{Binding CopyFinalNegativePromptCommand}" />
-                                        </Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Save Preset"
+                                                Command="{Binding SaveGenerationPresetCommand}"
+                                                Height="30"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Rename Preset"
+                                                Command="{Binding RenameGenerationPresetCommand}"
+                                                Height="30"
+                                                Margin="0,0,8,0" />
+                                        <Button Content="Delete Preset"
+                                                Command="{Binding DeleteGenerationPresetCommand}"
+                                                Height="30" />
                                     </StackPanel>
-                                </GroupBox>
-
-                            </StackPanel>
-                        </ScrollViewer>
-
-                        <!-- RIGHT -->
-                        <Grid Grid.Column="2">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="10" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="10" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-
-                            <!-- PREVIEWS -->
-                            <Grid Grid.Row="0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Source"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,4" />
-                                    <Border BorderBrush="#DDD"
-                                            BorderThickness="1"
-                                            CornerRadius="4">
-                                        <Image x:Name="SourcePreviewImage"
-                                               Height="260"
-                                               Stretch="Uniform" />
-                                    </Border>
                                 </StackPanel>
+                            </GroupBox>
 
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Generated"
-                                               FontWeight="SemiBold"
-                                               Margin="0,0,0,4" />
+                            <!-- ACTIONS -->
+                            <GroupBox Header="Actions">
+                                <StackPanel Margin="6">
 
-                                    <Border BorderBrush="#DDD"
-                                            BorderThickness="1"
-                                            CornerRadius="4">
-                                        <Image x:Name="PreviewImage"
-                                               Height="260"
-                                               Stretch="Uniform" />
-                                    </Border>
+                                    <Button Content="Analyze + Generate"
+                                            Command="{Binding AnalyzeAndGenerateCommand}"
+                                            Height="32"
+                                            Margin="0,0,0,8">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsImageAnalyzeMode}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
 
-                                    <TextBlock
-                                        Text="{Binding GeneratedImagePaths.Count, StringFormat=Generated images: {0}}"
-                                        Margin="0,8,0,6"
-                                        FontWeight="SemiBold" />
+                                    <Button Content="Generate from Final Prompt"
+                                            Command="{Binding GenerateFromFinalPromptCommand}"
+                                            Height="32"
+                                            Margin="0,0,0,8">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsImageAnalyzeMode}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
 
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                                  VerticalScrollBarVisibility="Disabled"
-                                                  Margin="0,0,0,8">
-                                        <ListBox ItemsSource="{Binding GeneratedImagePaths}"
-                                                 SelectedItem="{Binding SelectedGeneratedGalleryImagePath, Mode=TwoWay}"
-                                                 BorderThickness="0"
-                                                 Background="Transparent"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <Button Content="Generate from Text"
+                                            Command="{Binding GenerateFromTextCommand}"
+                                            Height="32"
+                                            Margin="0,0,0,8">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsTextToImageMode}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
 
-                                            <ListBox.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal" />
-                                                </ItemsPanelTemplate>
-                                            </ListBox.ItemsPanel>
+                                    <Button Content="Reset Generation Parameters"
+                                            Command="{Binding ResetGenerationParametersCommand}"
+                                            Height="32"
+                                            Margin="0,0,0,8" />
 
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="#DDD"
-                                                            BorderThickness="1"
-                                                            CornerRadius="4"
-                                                            Padding="4"
-                                                            Margin="0,0,8,0"
-                                                            Background="White">
-                                                        <Image Source="{Binding}"
-                                                               Width="72"
-                                                               Height="72"
-                                                               Stretch="UniformToFill" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
+                                    <Button Content="New Session"
+                                            Command="{Binding NewSessionCommand}"
+                                            Height="32" />
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
 
-                                            <ListBox.ItemContainerStyle>
-                                                <Style TargetType="ListBoxItem">
-                                                    <Setter Property="Padding" Value="0" />
-                                                    <Setter Property="Margin" Value="0" />
-                                                    <Setter Property="BorderThickness" Value="0" />
-                                                    <Setter Property="Background" Value="Transparent" />
-                                                    <Style.Triggers>
-                                                        <Trigger Property="IsSelected" Value="True">
-                                                            <Setter Property="Background" Value="Transparent" />
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </ListBox.ItemContainerStyle>
-                                        </ListBox>
-                                    </ScrollViewer>
+                    <!-- RIGHT PANEL -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="10" />
+                            <RowDefinition Height="220" />
+                        </Grid.RowDefinitions>
 
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="8" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
+                        <!-- SOURCE / OUTPUT PREVIEWS -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
 
-                                        <Button Grid.Column="0"
-                                                Content="Save Image As"
-                                                Command="{Binding SaveGeneratedImageAsCommand}"
-                                                Height="32" />
+                            <GroupBox Header="Source Preview"
+                                      Grid.Column="0">
+                                <GroupBox.Style>
+                                    <Style TargetType="GroupBox">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsImageAnalyzeMode}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </GroupBox.Style>
 
-                                        <Button Grid.Column="2"
-                                                Content="Open Output Folder"
-                                                Command="{Binding OpenGeneratedImageFolderCommand}"
-                                                Height="32" />
-                                    </Grid>
+                                <Border Margin="6"
+                                        MinHeight="260">
+                                    <Image x:Name="SourcePreviewImage"
+                                           Stretch="Uniform" />
+                                </Border>
+                            </GroupBox>
+
+                            <GroupBox Header="Generated Preview"
+                                      Grid.Column="2">
+                                <Border Margin="6"
+                                        MinHeight="260">
+                                    <Image x:Name="PreviewImage"
+                                           Stretch="Uniform" />
+                                </Border>
+                            </GroupBox>
+                        </Grid>
+
+                        <!-- GENERATED GALLERY -->
+                        <GroupBox Grid.Row="2"
+                                  Header="Generated Images">
+                            <Grid Margin="6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <ListBox ItemsSource="{Binding GeneratedImagePaths}"
+                                         SelectedItem="{Binding SelectedGeneratedGalleryImagePath}"
+                                         HorizontalContentAlignment="Stretch" />
+
+                                <StackPanel Grid.Row="1"
+                                            Orientation="Horizontal"
+                                            Margin="0,8,0,0">
+                                    <Button Content="Save As"
+                                            Command="{Binding SaveGeneratedImageAsCommand}"
+                                            Height="30"
+                                            Margin="0,0,8,0" />
+
+                                    <Button Content="Open Folder"
+                                            Command="{Binding OpenGeneratedImageFolderCommand}"
+                                            Height="30" />
                                 </StackPanel>
                             </Grid>
+                        </GroupBox>
 
-                            <!-- RESPONSE -->
-                            <StackPanel Grid.Row="2">
-                                <TextBlock Text="Response JSON"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,4" />
+                        <!-- RESPONSE JSON -->
+                        <GroupBox Grid.Row="4"
+                                  Header="Response JSON">
+                            <Grid Margin="6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
                                 <TextBox x:Name="ResponseJsonTextBox"
+                                         Grid.Row="0"
                                          Text="{Binding LastResponseJson}"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
-                                         Height="200"
                                          VerticalScrollBarVisibility="Auto"
                                          HorizontalScrollBarVisibility="Auto" />
-                            </StackPanel>
-                        </Grid>
+
+                                <Button Grid.Row="1"
+                                        Content="Copy JSON"
+                                        Command="{Binding CopyJsonCommand}"
+                                        Height="30"
+                                        Margin="0,8,0,0"
+                                        HorizontalAlignment="Left" />
+                            </Grid>
+                        </GroupBox>
                     </Grid>
 
                     <!-- DROP OVERLAY -->
                     <Border x:Name="DropOverlay"
-                            Background="#66000000"
+                            Grid.ColumnSpan="3"
+                            Background="#66007ACC"
+                            CornerRadius="12"
                             Visibility="Collapsed"
-                            CornerRadius="6">
-                        <StackPanel VerticalAlignment="Center"
-                                    HorizontalAlignment="Center">
-                            <TextBlock Text="⬇"
-                                       Foreground="White"
-                                       FontSize="42"
-                                       HorizontalAlignment="Center" />
-                            <TextBlock Text="Drop image here"
-                                       Foreground="White"
-                                       FontSize="24" />
-                        </StackPanel>
+                            IsHitTestVisible="False"
+                            Margin="8">
+                        <TextBlock Text="Drop image files here"
+                                   Foreground="White"
+                                   FontSize="28"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
                     </Border>
-
                 </Grid>
             </TabItem>
 
@@ -683,12 +787,12 @@
 
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="#DDD"
+                                        <Border BorderBrush="{DynamicResource BorderBrushTheme}"
                                                 BorderThickness="1"
                                                 CornerRadius="6"
                                                 Padding="8"
                                                 Margin="0,0,0,8"
-                                                Background="White">
+                                                Background="{DynamicResource SurfaceBrush}">
 
                                             <StackPanel>
 
@@ -704,32 +808,31 @@
 
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
-                                                                <Setter Property="Foreground" Value="#666" />
+                                                                <Setter Property="Foreground"
+                                                                        Value="{DynamicResource MutedTextBrushTheme}" />
 
                                                                 <Style.Triggers>
 
                                                                     <DataTrigger Binding="{Binding OperationType}"
                                                                             Value="AnalyzeAndGenerate">
-                                                                        <Setter Property="Foreground" Value="#0078D4" />
-                                                                        <!-- modrá -->
+                                                                        <Setter Property="Foreground"
+                                                                                Value="{DynamicResource AccentBrushTheme}" />
                                                                     </DataTrigger>
 
                                                                     <DataTrigger Binding="{Binding OperationType}"
                                                                             Value="GenerateOnly">
-                                                                        <Setter Property="Foreground" Value="#28A745" />
-                                                                        <!-- zelená -->
+                                                                        <Setter Property="Foreground"
+                                                                                Value="{DynamicResource SuccessBrushTheme}" />
                                                                     </DataTrigger>
 
                                                                     <DataTrigger Binding="{Binding OperationType}"
                                                                             Value="GenerateFromFinalPrompt">
                                                                         <Setter Property="Foreground" Value="#6F42C1" />
-                                                                        <!-- fialová -->
                                                                     </DataTrigger>
 
                                                                     <DataTrigger Binding="{Binding OperationType}"
                                                                             Value="GenerateFromText">
                                                                         <Setter Property="Foreground" Value="#FD7E14" />
-                                                                        <!-- oranžová -->
                                                                     </DataTrigger>
 
                                                                 </Style.Triggers>
@@ -742,11 +845,11 @@
                                                 <!-- SERVER + MODEL -->
                                                 <TextBlock Text="{Binding ServerName}"
                                                            FontSize="11"
-                                                           Foreground="#555" />
+                                                           Foreground="{DynamicResource SubtleTextBrushTheme}" />
 
                                                 <TextBlock Text="{Binding ModelName}"
                                                            FontSize="11"
-                                                           Foreground="#777" />
+                                                           Foreground="{DynamicResource MutedTextBrushTheme}" />
 
                                                 <!-- IMAGE COUNT -->
                                                 <TextBlock
@@ -759,7 +862,7 @@
                                                            FontSize="11"
                                                            TextTrimming="CharacterEllipsis"
                                                            MaxHeight="32"
-                                                           Foreground="#444"
+                                                           Foreground="{DynamicResource SubtleTextBrushTheme}"
                                                            Margin="0,4,0,0" />
 
                                             </StackPanel>
@@ -889,9 +992,10 @@
                                 <TextBlock Text="Source"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
-                                <Border BorderBrush="#DDD"
+                                <Border BorderBrush="{DynamicResource BorderBrushTheme}"
                                         BorderThickness="1"
-                                        CornerRadius="4">
+                                        CornerRadius="4"
+                                        Background="{DynamicResource SurfaceBrush}">
                                     <Image x:Name="HistorySourcePreviewImage"
                                            Height="220"
                                            Stretch="Uniform" />
@@ -902,9 +1006,10 @@
                                 <TextBlock Text="Generated"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,4" />
-                                <Border BorderBrush="#DDD"
+                                <Border BorderBrush="{DynamicResource BorderBrushTheme}"
                                         BorderThickness="1"
-                                        CornerRadius="4">
+                                        CornerRadius="4"
+                                        Background="{DynamicResource SurfaceBrush}">
                                     <Image x:Name="HistoryGeneratedPreviewImage"
                                            Height="220"
                                            Stretch="Uniform" />
@@ -969,13 +1074,451 @@
 
             </TabItem>
 
+            <!-- MODELS -->
+            <TabItem Header="Models">
+
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- INSTALLED MODELS -->
+                    <GroupBox Header="Installed Models" Grid.Column="0">
+                        <DockPanel Margin="6">
+
+                            <!-- TOP ACTIONS -->
+                            <Grid DockPanel.Dock="Top"
+                                  Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="110" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="Installed models available on backend"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                                <Button Grid.Column="2"
+                                        Content="Unload All"
+                                        Command="{Binding UnloadAllModelsCommand}"
+                                        Height="28" />
+
+                                <Button Grid.Column="4"
+                                        Content="Refresh"
+                                        Command="{Binding RefreshInstalledModelsCommand}"
+                                        Height="28" />
+                            </Grid>
+
+                            <ListBox ItemsSource="{Binding InstalledDiscoverModels}"
+                                     SelectedItem="{Binding SelectedDiscoverModel}"
+                                     HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#DDD"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                HorizontalAlignment="Stretch"
+                                                Padding="6"
+                                                Margin="0,0,0,6"
+                                                Background="White">
+
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="White" />
+                                                    <Setter Property="BorderBrush" Value="#DDD" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Background" Value="#E6F2FF" />
+                                                            <Setter Property="BorderBrush" Value="#3399FF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding DisplayTitle}"
+                                                           FontWeight="SemiBold" />
+
+                                                <TextBlock Text="{Binding TagsText}"
+                                                           FontSize="11"
+                                                           Foreground="#666"
+                                                           TextWrapping="Wrap" />
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0,6,0,0">
+                                                    <Button Content="Use"
+                                                            Width="60"
+                                                            Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.SelectModelCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding Id}" />
+
+                                                    <Button Content="Unload"
+                                                            Width="70"
+                                                            Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.UnloadModelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+
+                                                    <Button Content="Uninstall"
+                                                            Width="80"
+                                                            Command="{Binding DataContext.UninstallDiscoveredModelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                        </DockPanel>
+                    </GroupBox>
+
+                    <!-- DISCOVER MODELS -->
+                    <GroupBox Header="Discover" Grid.Column="2">
+                        <DockPanel Margin="6">
+
+                            <!-- SEARCH -->
+                            <StackPanel DockPanel.Dock="Top"
+                                        Margin="0,0,0,6">
+
+                                <TextBox Text="{Binding DiscoverSearchText}"
+                                         Height="28"
+                                         Margin="0,0,0,6" />
+
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox Content="Only SDXL"
+                                              IsChecked="{Binding DiscoverOnlySdxl}"
+                                              Margin="0,0,12,0" />
+
+                                    <Button Content="Search"
+                                            Command="{Binding RefreshDiscoverModelsCommand}"
+                                            Width="80" />
+                                </StackPanel>
+
+                            </StackPanel>
+
+                            <!-- LIST -->
+                            <ListBox ItemsSource="{Binding DiscoverModelItems}"
+                                     SelectedItem="{Binding SelectedDiscoverModel}"
+                                     HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#DDD"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="6"
+                                                HorizontalAlignment="Stretch"
+                                                Margin="0,0,0,6"
+                                                Background="White">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="White" />
+                                                    <Setter Property="BorderBrush" Value="#DDD" />
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Background" Value="#E6F2FF" />
+                                                            <Setter Property="BorderBrush" Value="#3399FF" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <StackPanel>
+
+                                                <TextBlock Text="{Binding DisplayTitle}"
+                                                           FontWeight="SemiBold" />
+
+                                                <TextBlock Text="{Binding DisplayMeta}"
+                                                           FontSize="11"
+                                                           Foreground="#666" />
+
+                                                <TextBlock Text="{Binding TagsText}"
+                                                           FontSize="11"
+                                                           Foreground="#777"
+                                                           TextWrapping="Wrap" />
+
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="0,6,0,0">
+
+                                                    <Button Content="Install"
+                                                            Width="70"
+                                                            Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.InstallDiscoveredModelCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="IsEnabled" Value="True" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Installed}"
+                                                                            Value="True">
+                                                                        <Setter Property="IsEnabled" Value="False" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+
+                                                    <TextBlock Text="{Binding InstallStateText}"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="#888" />
+
+                                                </StackPanel>
+
+                                            </StackPanel>
+
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                        </DockPanel>
+                    </GroupBox>
+
+                </Grid>
+
+            </TabItem>
+
+            <!-- JOBS -->
+            <TabItem Header="Jobs">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="Jobs"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center" />
+
+                        <Button Content="Refresh"
+                                DockPanel.Dock="Right"
+                                Height="30"
+                                Width="100"
+                                Command="{Binding RefreshJobsCommand}" />
+                    </DockPanel>
+
+                    <ListView Grid.Row="1"
+                              ItemsSource="{Binding JobItems}"
+                              SelectedItem="{Binding SelectedJobItem}"
+                              HorizontalContentAlignment="Stretch"
+                              Background="{DynamicResource SurfaceBrush}">
+
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="10"
+                                        Margin="0,0,0,8"
+                                        Background="{DynamicResource SurfaceMutedBrush}"
+                                        CornerRadius="6"
+                                        HorizontalAlignment="Stretch">
+
+                                    <StackPanel>
+
+                                        <!-- TOP ROW -->
+                                        <DockPanel>
+                                            <TextBlock Text="{Binding DisplayStatus}"
+                                                       FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource TextPrimaryBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                <Setter Property="Foreground" Value="LightGreen" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                                                <Setter Property="Foreground" Value="Tomato" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                                                                <Setter Property="Foreground" Value="Gray" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="Foreground" Value="Gold" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <Button Content="Cancel"
+                                                    DockPanel.Dock="Right"
+                                                    Margin="8,0,0,0"
+                                                    Command="{Binding DataContext.CancelJobByIdCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                                    CommandParameter="{Binding JobId}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                        </DockPanel>
+
+                                        <!-- JOB ID -->
+                                        <TextBlock Text="{Binding ShortJobId, StringFormat=Job: {0}}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,2,0,0"
+                                                   ToolTip="{Binding JobId}" />
+
+                                        <!-- MESSAGE -->
+                                        <TextBlock Text="{Binding Message}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,2,0,6"
+                                                   TextWrapping="Wrap" />
+
+                                        <!-- PROGRESS -->
+                                        <ProgressBar Value="{Binding Progress}"
+                                                     Height="6"
+                                                     Maximum="100" />
+
+                                        <TextBlock Text="{Binding Progress, StringFormat=Progress: {0}%}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,4,0,0" />
+
+                                        <!-- TRANSLATION INFO -->
+                                        <TextBlock Text="{Binding PromptTranslationLabel}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding PromptTranslationLabel}"
+                                                                     Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding PromptTranslationLabel}"
+                                                                     Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <Trigger Property="Text" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </Trigger>
+                                                        <DataTrigger Binding="{Binding PromptTranslationLabel}"
+                                                                     Value=" ">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- ORIGINAL PROMPT -->
+                                        <TextBlock Text="Original Prompt:"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,8,0,2">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPrompt}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="{Binding OriginalPrompt}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Margin="0,0,0,6">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasOriginalPrompt}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- FINAL PROMPT -->
+                                        <TextBlock Text="Final Prompt:"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,2,0,2">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasPrompt}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <TextBlock Text="{Binding Prompt}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   Margin="0,0,0,6">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding HasPrompt}" Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+
+                                        <!-- EXTRA INFO -->
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="0,6,0,0">
+                                            <TextBlock Text="{Binding ModelId}"
+                                                       FontSize="11"
+                                                       Margin="0,0,12,0" />
+
+                                            <TextBlock Text="{Binding Seed, StringFormat=Seed: {0}}"
+                                                       FontSize="11" />
+                                        </StackPanel>
+
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+
+                    </ListView>
+                </Grid>
+            </TabItem>
+
         </TabControl>
 
         <!-- STATUS BAR -->
         <Border Grid.Row="3"
-                Background="#F3F3F3"
+                Background="{DynamicResource SurfaceAltBrush}"
                 Padding="6"
-                BorderBrush="#DDD"
+                BorderBrush="{DynamicResource BorderBrushTheme}"
                 BorderThickness="1,1,1,0">
             <DockPanel LastChildFill="True">
 
@@ -1011,7 +1554,20 @@
                                  Minimum="0"
                                  Maximum="100"
                                  Value="{Binding GenerationProgress}"
-                                 VerticalAlignment="Center" />
+                                 VerticalAlignment="Center"
+                                 Margin="0,0,8,0" />
+
+                    <TextBlock Text="{Binding CurrentJobText}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"
+                               Width="260"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <Button Content="Cancel"
+                            Command="{Binding CancelGenerationCommand}"
+                            Height="24"
+                            MinWidth="70"
+                            Padding="10,2" />
                 </StackPanel>
 
                 <!-- RIGHT: MODEL INSTALL PROGRESS -->
@@ -1035,19 +1591,31 @@
                                Margin="0,0,8,0" />
 
                     <ProgressBar Width="180"
-                                 Height="14"
+                                 Height="16"
                                  Minimum="0"
                                  Maximum="100"
                                  Value="{Binding InstallProgress}"
                                  VerticalAlignment="Center" />
+
+                    <TextBlock Text="{Binding InstallProgress, StringFormat={}{0:0}%}"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"
+                               FontWeight="SemiBold" />
                 </StackPanel>
 
                 <!-- RIGHT: BUSY -->
+                <TextBlock Text="{Binding ClientVersionText}"
+                           DockPanel.Dock="Right"
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+
                 <TextBlock x:Name="BusyTextBlock"
                            Text="Working..."
                            Visibility="Collapsed"
                            VerticalAlignment="Center"
-                           DockPanel.Dock="Right" />
+                           DockPanel.Dock="Right"
+                           Margin="12,0,0,0" />
             </DockPanel>
         </Border>
 
