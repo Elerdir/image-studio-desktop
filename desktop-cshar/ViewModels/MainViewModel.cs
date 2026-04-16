@@ -43,10 +43,13 @@ public partial class MainViewModel : BaseViewModel
     {
         InitializeCommands();
 
-        LoadAppSettingsAsync();
-        LoadGenerationPresets();
-        LoadWorkspaceStateAsync();
-        LoadServersAsync();
-        LoadHistoryAsync();
+        // Fire-and-forget async initialization. Methods are async Task so
+        // any unhandled exceptions surface via the returned Task rather than
+        // crashing the app silently through an async void path.
+        _ = LoadAppSettingsAsync();
+        _ = LoadGenerationPresetsAsync();
+        _ = LoadWorkspaceStateAsync();
+        _ = LoadServersAsync();
+        _ = LoadHistoryAsync();
     }
 }
