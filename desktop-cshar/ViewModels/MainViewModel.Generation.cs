@@ -221,23 +221,15 @@ public partial class MainViewModel
         InstallProgress = 0;
         UpdateStatusUi("Installing selected model...", true);
 
+        using var cts = new CancellationTokenSource();
+        // Fake progress animation: runs until cancelled by finally block.
+        var progressTask = RunFakeInstallProgressAsync(cts.Token);
+
         try
         {
-            _ = Task.Run(async () =>
-            {
-                while (IsInstallingModel && InstallProgress < 90)
-                {
-                    await Task.Delay(300);
-                    InstallProgress += 5;
-                }
-            });
-
             var success = await _apiClientService.InstallModelAsync(
                 SelectedServer.BaseUrl,
                 SelectedModel.Id);
-
-            IsInstallingModel = false;
-            InstallProgress = 100;
 
             if (!success)
             {
@@ -255,6 +247,11 @@ public partial class MainViewModel
         }
         finally
         {
+            // Cancel the animation loop before touching shared state so it
+            // can never write InstallProgress after we reset it below.
+            await cts.CancelAsync();
+            await progressTask;
+
             IsInstallingModel = false;
             InstallProgress = 0;
             UpdateStatusUi("Ready", false);
@@ -270,25 +267,16 @@ public partial class MainViewModel
         InstallProgress = 0;
         UpdateStatusUi("Installing new model...", true);
 
+        var requestedModelId = NewModelId.Trim();
+
+        using var cts = new CancellationTokenSource();
+        var progressTask = RunFakeInstallProgressAsync(cts.Token);
+
         try
         {
-            var requestedModelId = NewModelId.Trim();
-
-            _ = Task.Run(async () =>
-            {
-                while (IsInstallingModel && InstallProgress < 90)
-                {
-                    await Task.Delay(300);
-                    InstallProgress += 5;
-                }
-            });
-
             var success = await _apiClientService.InstallModelAsync(
                 SelectedServer.BaseUrl,
                 requestedModelId);
-
-            IsInstallingModel = false;
-            InstallProgress = 100;
 
             if (!success)
             {
@@ -312,9 +300,34 @@ public partial class MainViewModel
         }
         finally
         {
+            await cts.CancelAsync();
+            await progressTask;
+
             IsInstallingModel = false;
             InstallProgress = 0;
             UpdateStatusUi("Ready", false);
+        }
+    }
+
+    /// <summary>
+    /// Slowly increments <see cref="InstallProgress"/> up to 90 % to give the
+    /// user visual feedback during model installation.  Stops as soon as the
+    /// <paramref name="cancellationToken"/> is cancelled so the caller can
+    /// safely reset the property afterwards without a race condition.
+    /// </summary>
+    private async Task RunFakeInstallProgressAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested && InstallProgress < 90)
+            {
+                await Task.Delay(300, cancellationToken);
+                InstallProgress = Math.Min(InstallProgress + 5, 90);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when installation completes or fails – swallow.
         }
     }
 
