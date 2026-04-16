@@ -17,7 +17,7 @@ public partial class MainViewModel
 
         while (true)
         {
-            // 🔥 delay AŽ po prvním requestu (lepší UX)
+            // delay AŽ po prvním requestu (lepší UX)
             var status = await _apiClientService.GetJobStatusAsync(
                 SelectedServer.BaseUrl,
                 jobId);
@@ -33,7 +33,7 @@ public partial class MainViewModel
                 ? status.Status
                 : status.Message;
 
-            // 🔥 DEBUG (můžeš si nechat)
+            // DEBUG (můžeš si nechat)
             // Console.WriteLine($"Polling job {jobId} | {status.Status} | {status.Progress}");
 
             if (status.Status == "completed")
@@ -59,7 +59,7 @@ public partial class MainViewModel
                 return null;
             }
 
-            // 🔥 KLÍČOVÉ — 1 sekunda
+            // KLÍČOVÉ — 1 sekunda
             await Task.Delay(1000);
         }
     }
